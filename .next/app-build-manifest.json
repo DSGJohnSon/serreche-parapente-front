@@ -1,0 +1,74 @@
+{
+  "pages": {
+    "/(public)/checkout/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(public)/checkout/page.js"
+    ],
+    "/(public)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(public)/layout.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
+    ],
+    "/(public)/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(public)/page.css",
+      "static/chunks/app/(public)/page.js"
+    ],
+    "/(public)/bi-places/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(public)/bi-places/page.css",
+      "static/chunks/app/(public)/bi-places/page.js"
+    ],
+    "/(public)/bi-places/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(public)/bi-places/layout.js"
+    ],
+    "/(public)/checkout/payment/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(public)/checkout/payment/page.js"
+    ],
+    "/(public)/checkout/success/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(public)/checkout/success/page.js"
+    ],
+    "/(public)/nos-stages/initiation/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(public)/nos-stages/initiation/page.css",
+      "static/chunks/app/(public)/nos-stages/initiation/page.js"
+    ],
+    "/(public)/nos-stages/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(public)/nos-stages/layout.js"
+    ],
+    "/(public)/nos-stages/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(public)/nos-stages/page.css",
+      "static/chunks/app/(public)/nos-stages/page.js"
+    ],
+    "/(public)/bon-cadeau/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(public)/bon-cadeau/page.js"
+    ],
+    "/(public)/reserver/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(public)/reserver/page.js"
+    ]
+  }
+}

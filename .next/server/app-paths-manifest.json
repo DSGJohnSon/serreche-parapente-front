@@ -1,0 +1,8 @@
+{
+  "/(public)/page": "app/(public)/page.js",
+  "/(public)/checkout/payment/page": "app/(public)/checkout/payment/page.js",
+  "/(public)/checkout/success/page": "app/(public)/checkout/success/page.js",
+  "/(public)/reserver/page": "app/(public)/reserver/page.js",
+  "/(public)/checkout/page": "app/(public)/checkout/page.js",
+  "/(public)/bi-places/page": "app/(public)/bi-places/page.js"
+}

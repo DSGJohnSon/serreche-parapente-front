@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { ChevronRightIcon, MapPinIcon, ClockIcon, PhoneIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { ReserveButton } from "@/components/booking/ReserveButton";
 
 export async function generateMetadata() {
   return {
@@ -181,12 +182,11 @@ export default function NosStagesPage() {
           </p>
           <p className="text-slate-600 text-sm mt-1">+ Option vidéo : 25,00€</p>
           <div className="flex flex-col md:flex-row gap-4 mt-4">
-            <Link href="/" className="inline-block">
-              <Button variant="default" size={"lg"} className="gap-2">
-                <ChevronRightIcon size={16} />
-                Je réserve mon vol aventure
-              </Button>
-            </Link>
+            <ReserveButton
+              type="bapteme"
+              baptemeCategory="AVENTURE"
+              className="gap-2"
+            />
           </div>
         </div>
       </section>
@@ -244,12 +244,11 @@ export default function NosStagesPage() {
           </p>
           <p className="text-slate-600 text-sm mt-1">+ Option vidéo : 25,00€</p>
           <div className="flex flex-col md:flex-row gap-4 mt-4">
-            <Link href="/" className="inline-block">
-              <Button variant="default" size={"lg"} className="gap-2">
-                <ChevronRightIcon size={16} />
-                Je réserve mon vol durée
-              </Button>
-            </Link>
+            <ReserveButton
+              type="bapteme"
+              baptemeCategory="DUREE"
+              className="gap-2"
+            />
           </div>
         </div>
       </section>
@@ -305,12 +304,11 @@ export default function NosStagesPage() {
           </p>
           <p className="text-slate-600 text-sm mt-1">+ Option vidéo : 25,00€</p>
           <div className="flex flex-col md:flex-row gap-4 mt-4">
-            <Link href="/" className="inline-block">
-              <Button variant="default" size={"lg"} className="gap-2">
-                <ChevronRightIcon size={16} />
-                Je réserve mon vol longue durée
-              </Button>
-            </Link>
+            <ReserveButton
+              type="bapteme"
+              baptemeCategory="LONGUE_DUREE"
+              className="gap-2"
+            />
           </div>
         </div>
       </section>
@@ -365,12 +363,11 @@ export default function NosStagesPage() {
           </p>
           <p className="text-slate-600 text-sm mt-1">+ Option vidéo : 25,00€</p>
           <div className="flex flex-col md:flex-row gap-4 mt-4">
-            <Link href="/" className="inline-block">
-              <Button variant="default" size={"lg"} className="gap-2">
-                <ChevronRightIcon size={16} />
-                Je réserve un vol enfant
-              </Button>
-            </Link>
+            <ReserveButton
+              type="bapteme"
+              baptemeCategory="ENFANT"
+              className="gap-2"
+            />
           </div>
         </div>
       </section>
@@ -424,12 +421,11 @@ export default function NosStagesPage() {
           </p>
           <p className="text-slate-600 text-sm mt-1">+ Option vidéo : 25,00€</p>
           <div className="flex flex-col md:flex-row gap-4 mt-4">
-            <Link href="/" className="inline-block">
-              <Button variant="default" size={"lg"} className="gap-2">
-                <ChevronRightIcon size={16} />
-                Je réserve mon vol Hiver
-              </Button>
-            </Link>
+            <ReserveButton
+              type="bapteme"
+              baptemeCategory="HIVER"
+              className="gap-2"
+            />
           </div>
         </div>
       </section>
@@ -486,7 +482,7 @@ export default function NosStagesPage() {
             </p>
           </div>
           <div className="flex flex-col md:flex-row gap-4 mt-4">
-            <Link href="/" className="inline-block">
+            <Link href="/bon-cadeau" className="inline-block">
               <Button variant="default" size={"lg"} className="gap-2">
                 <ChevronRightIcon size={16} />
                 J'offre un bon cadeau baptême

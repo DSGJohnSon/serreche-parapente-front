@@ -12,6 +12,7 @@ import { LucideMenu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 declare const window: any;
 
 
@@ -54,6 +55,11 @@ export default function PublicLayout({
             priority
           />
         </Link>
+        {/* Panier */}
+        <div className={`z-[70] transition-all duration-300 ${isScrolled ? "fixed right-16 top-2" : "fixed right-20 top-[6vh]"}`}>
+          <CartSidebar />
+        </div>
+
         <DropdownMenu open={isMenuOpened} onOpenChange={setIsMenuOpened}>
           <DropdownMenuTrigger asChild>
             <Button

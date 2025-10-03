@@ -4,6 +4,7 @@ import Testimonial from "@/components/sections/TestimonySection";
 import SliderPentesEcoles from "@/components/ui-self/sliders/SliderPentesEcoles";
 import SliderSitesGrandVols from "@/components/ui-self/sliders/SliderSitesGrandVols";
 import { Button } from "@/components/ui/button";
+import { ReserveButton } from "@/components/booking/ReserveButton";
 import {
   Dialog,
   DialogContent,
@@ -127,11 +128,11 @@ export default function NosStagesPage() {
                 Plus d&apos;informations
               </Button>
             </Link>
-            <Link href="/" className="inline-block">
-              <Button variant="outline" size={"lg"} className="gap-2">
-                Je réserve un stage initiation
-              </Button>
-            </Link>
+            <ReserveButton
+              type="stage"
+              stageType="INITIATION"
+              className="gap-2"
+            />
           </div>
         </div>
       </section>
@@ -181,11 +182,11 @@ export default function NosStagesPage() {
                 Plus d&apos;informations
               </Button>
             </Link>
-            <Link href="/" className="inline-block">
-              <Button variant="outline" size={"lg"} className="gap-2">
-                Je réserve un stage progression
-              </Button>
-            </Link>
+            <ReserveButton
+              type="stage"
+              stageType="PROGRESSION"
+              className="gap-2"
+            />
           </div>
         </div>
       </section>
@@ -239,11 +240,11 @@ export default function NosStagesPage() {
                 Plus d&apos;informations
               </Button>
             </Link>
-            <Link href="/" className="inline-block">
-              <Button variant="outline" size={"lg"} className="gap-2">
-                Je réserve un stage autonomie
-              </Button>
-            </Link>
+            <ReserveButton
+              type="stage"
+              stageType="AUTONOMIE"
+              className="gap-2"
+            />
           </div>
         </div>
       </section>
