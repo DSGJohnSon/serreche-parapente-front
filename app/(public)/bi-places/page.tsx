@@ -482,7 +482,7 @@ export default function NosStagesPage() {
             </p>
           </div>
           <div className="flex flex-col md:flex-row gap-4 mt-4">
-            <Link href="/bon-cadeau" className="inline-block">
+            <Link href="/reserver/bon-cadeau" className="inline-block">
               <Button variant="default" size={"lg"} className="gap-2">
                 <ChevronRightIcon size={16} />
                 J'offre un bon cadeau baptême

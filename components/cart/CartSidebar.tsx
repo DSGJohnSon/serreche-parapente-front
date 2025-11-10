@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { ShoppingCart, Trash2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { SessionManager } from '@/lib/sessionManager';
-import { useToast } from '@/components/ui/use-toast';
-import { CartItemCard } from './CartItemCard';
+import { useState, useEffect } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart, Trash2, Mountain, Users, Gift, ChevronDown, ChevronUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { SessionManager } from "@/lib/sessionManager";
+import { useToast } from "@/components/ui/use-toast";
+import { CartItemCard } from "./CartItemCard";
 
 interface CartItem {
   id: string;
@@ -19,25 +25,26 @@ interface CartItem {
   giftCardAmount?: number;
 }
 
-export function CartSidebar() {
+export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
     loadCartItems();
-    
+
     // Écouter les événements de mise à jour du panier
     const handleCartUpdate = () => {
       loadCartItems();
     };
-    
-    window.addEventListener('cartUpdated', handleCartUpdate);
-    
+
+    window.addEventListener("cartUpdated", handleCartUpdate);
+
     return () => {
-      window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener("cartUpdated", handleCartUpdate);
     };
   }, []);
 
@@ -45,21 +52,24 @@ export function CartSidebar() {
     try {
       setLoading(true);
       const sessionId = SessionManager.getOrCreateSessionId();
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/api/cart/items`, {
-        headers: {
-          'x-session-id': sessionId,
-          'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
-        },
-      });
-      
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/api/cart/items`,
+        {
+          headers: {
+            "x-session-id": sessionId,
+            "x-api-key": process.env.NEXT_PUBLIC_API_KEY || "",
+          },
+        }
+      );
+
       const data = await response.json();
       if (data.success) {
         setCartItems(data.data.items);
         setTotalAmount(data.data.totalAmount);
       }
     } catch (error) {
-      console.error('Erreur chargement panier:', error);
+      console.error("Erreur chargement panier:", error);
     } finally {
       setLoading(false);
     }
@@ -68,15 +78,18 @@ export function CartSidebar() {
   const removeItem = async (itemId: string) => {
     try {
       const sessionId = SessionManager.getOrCreateSessionId();
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/api/cart/remove/${itemId}`, {
-        method: 'DELETE',
-        headers: {
-          'x-session-id': sessionId,
-          'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
-        },
-      });
-      
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/api/cart/remove/${itemId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "x-session-id": sessionId,
+            "x-api-key": process.env.NEXT_PUBLIC_API_KEY || "",
+          },
+        }
+      );
+
       const data = await response.json();
       if (data.success) {
         toast({
@@ -92,7 +105,7 @@ export function CartSidebar() {
         });
       }
     } catch (error) {
-      console.error('Erreur suppression item:', error);
+      console.error("Erreur suppression item:", error);
       toast({
         title: "Erreur",
         description: "Erreur lors de la suppression",
@@ -104,15 +117,18 @@ export function CartSidebar() {
   const clearCart = async () => {
     try {
       const sessionId = SessionManager.getOrCreateSessionId();
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/api/cart/clear`, {
-        method: 'DELETE',
-        headers: {
-          'x-session-id': sessionId,
-          'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
-        },
-      });
-      
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/api/cart/clear`,
+        {
+          method: "DELETE",
+          headers: {
+            "x-session-id": sessionId,
+            "x-api-key": process.env.NEXT_PUBLIC_API_KEY || "",
+          },
+        }
+      );
+
       const data = await response.json();
       if (data.success) {
         toast({
@@ -122,15 +138,92 @@ export function CartSidebar() {
         loadCartItems();
       }
     } catch (error) {
-      console.error('Erreur vidage panier:', error);
+      console.error("Erreur vidage panier:", error);
     }
+  };
+
+  const groupItemsByType = () => {
+    const groups: Record<string, CartItem[]> = {
+      STAGE: [],
+      BAPTEME: [],
+      GIFT_CARD: [],
+    };
+
+    cartItems.forEach((item) => {
+      if (item.type === 'STAGE') groups.STAGE.push(item);
+      else if (item.type === 'BAPTEME') groups.BAPTEME.push(item);
+      else if (item.type === 'GIFT_CARD') groups.GIFT_CARD.push(item);
+    });
+
+    return groups;
+  };
+
+  const getSectionInfo = (type: string) => {
+    switch (type) {
+      case 'STAGE':
+        return {
+          title: 'Stages',
+          icon: Mountain,
+          color: 'text-slate-600',
+          bgColor: 'bg-slate-50',
+          borderColor: 'border-slate-200',
+        };
+      case 'BAPTEME':
+        return {
+          title: 'Baptêmes',
+          icon: Users,
+          color: 'text-slate-600',
+          bgColor: 'bg-slate-50',
+          borderColor: 'border-slate-200',
+        };
+      case 'GIFT_CARD':
+        return {
+          title: 'Bons Cadeaux',
+          icon: Gift,
+          color: 'text-slate-600',
+          bgColor: 'bg-slate-50',
+          borderColor: 'border-slate-200',
+        };
+      default:
+        return {
+          title: 'Articles',
+          icon: ShoppingCart,
+          color: 'text-gray-600',
+          bgColor: 'bg-gray-50',
+          borderColor: 'border-gray-200',
+        };
+    }
+  };
+
+  const toggleSection = (type: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [type]: !prev[type]
+    }));
+  };
+
+  const getCategoryPrice = (category: string) => {
+    const prices: Record<string, number> = {
+      'AVENTURE': 110,
+      'DUREE': 150,
+      'LONGUE_DUREE': 185,
+      'ENFANT': 90,
+      'HIVER': 130,
+    };
+    return prices[category] || 110;
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="relative">
-          <ShoppingCart className="w-4 h-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          className={`m-2 p-0.5 2xl:p-4 z-[70] transition-all duration-300 rounded-full
+        ${isScrolled ? "fixed right-14 top-2" : "fixed right-16 top-[6vh]"}
+        `}
+        >
+          <ShoppingCart className="size-4" />
           {cartItems.length > 0 && (
             <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
               {cartItems.length}
@@ -139,16 +232,24 @@ export function CartSidebar() {
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="w-full sm:max-w-lg">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-lg h-[100svh] z-[100] bg-gradient-to-b from-white to-slate-50 py-16 pb-32">
+        <SheetHeader className="pb-6">
           <SheetTitle className="flex items-center justify-between">
-            <span>Votre panier ({cartItems.length})</span>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <ShoppingCart className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">Votre panier</h2>
+                <p className="text-sm text-gray-600">{cartItems.length} article{cartItems.length > 1 ? 's' : ''}</p>
+              </div>
+            </div>
             {cartItems.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearCart}
-                className="text-red-500 hover:text-red-700"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -165,43 +266,127 @@ export function CartSidebar() {
                 <p>Chargement...</p>
               </div>
             ) : cartItems.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Votre panier est vide</p>
-                <p className="text-sm mt-2">Ajoutez des stages ou baptêmes pour commencer</p>
+              <div className="text-center py-12">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                  <ShoppingCart className="w-10 h-10 text-blue-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Votre panier est vide</h3>
+                <p className="text-gray-500 mb-6">
+                  Découvrez nos expériences uniques en parapente
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsOpen(false);
+                    window.location.href = "/reserver";
+                  }}
+                  className="border-slate-200 text-slate-600 hover:bg-slate-50"
+                >
+                  Explorer les activités
+                </Button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {cartItems.map((item) => (
-                  <CartItemCard
-                    key={item.id}
-                    item={item}
-                    onRemove={() => removeItem(item.id)}
-                    onUpdate={loadCartItems}
-                  />
-                ))}
+              <div className="space-y-6">
+                {Object.entries(groupItemsByType()).map(([type, items]) => {
+                  if (items.length === 0) return null;
+
+                  const sectionInfo = getSectionInfo(type);
+                  const IconComponent = sectionInfo.icon;
+                  const isCollapsed = collapsedSections[type];
+
+                  return (
+                    <div key={type} className="space-y-3">
+                      {/* Section Header */}
+                      <div
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm ${sectionInfo.bgColor} ${sectionInfo.borderColor}`}
+                        onClick={() => toggleSection(type)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${sectionInfo.bgColor} border ${sectionInfo.borderColor}`}>
+                            <IconComponent className={`w-5 h-5 ${sectionInfo.color}`} />
+                          </div>
+                          <div>
+                            <h3 className={`font-semibold text-sm ${sectionInfo.color}`}>
+                              {sectionInfo.title}
+                            </h3>
+                            <p className="text-xs text-gray-600">
+                              {items.length} article{items.length > 1 ? 's' : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-semibold ${sectionInfo.color}`}>
+                            {items.reduce((total, item) => {
+                              switch (item.type) {
+                                case 'STAGE':
+                                  return total + (item.stage?.price || 0);
+                                case 'BAPTEME':
+                                  const basePrice = getCategoryPrice(item.participantData.selectedCategory);
+                                  const videoPrice = item.participantData.hasVideo ? 25 : 0;
+                                  return total + basePrice + videoPrice;
+                                case 'GIFT_CARD':
+                                  return total + (item.giftCardAmount || 0);
+                                default:
+                                  return total;
+                              }
+                            }, 0)}€
+                          </span>
+                          {isCollapsed ? (
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                          ) : (
+                            <ChevronUp className="w-4 h-4 text-gray-400" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Section Items */}
+                      {!isCollapsed && (
+                        <div className="space-y-3 pl-4 border-l-2 border-gray-200">
+                          {items.map((item) => (
+                            <CartItemCard
+                              key={item.id}
+                              item={item}
+                              onRemove={() => removeItem(item.id)}
+                              onUpdate={loadCartItems}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
 
           {/* Footer avec total et checkout */}
           {cartItems.length > 0 && (
-            <div className="border-t pt-4 space-y-4">
-              <div className="flex justify-between items-center text-lg font-semibold">
-                <span>Total</span>
-                <span>{totalAmount.toFixed(2)}€</span>
+            <div className="border-t border-gray-200 pt-6 space-y-4">
+              <div className="bg-slate-100 rounded-lg p-4 border border-slate-400">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-slate-900">Total à payer</p>
+                    <p className="text-2xl font-bold text-blue-600">{totalAmount.toFixed(2)}€</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-slate-900">{cartItems.length} article{cartItems.length > 1 ? 's' : ''}</p>
+                  </div>
+                </div>
               </div>
-              
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={() => {
-                  setIsOpen(false);
-                  window.location.href = '/checkout';
-                }}
-              >
-                Procéder au paiement
-              </Button>
+
+              <div className="space-y-2">                
+                <Button
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
+                  size="lg"
+                  onClick={() => {
+                    setIsOpen(false);
+                    window.location.href = "/checkout";
+                  }}
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Procéder au paiement
+                </Button>
+              </div>
             </div>
           )}
         </div>

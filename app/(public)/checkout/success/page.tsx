@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Download, Mail, Phone, Calendar } from 'lucide-react';
 
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessPageContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order');
   
@@ -217,5 +217,20 @@ export default function CheckoutSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p>Chargement de votre confirmation...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutSuccessPageContent />
+    </Suspense>
   );
 }

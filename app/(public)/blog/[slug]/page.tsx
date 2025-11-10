@@ -137,9 +137,10 @@ const PostPage = async ({ params }: PostPageProps) => {
               />
             </div>
           )}
-          <div className="my-16 lg:my-32 prose prose-blue prose-lg prose-a:text-blue-800 mx-auto">
+          <div className="my-16 lg:my-32 prose prose-blue prose-lg prose-a:text-blue-800 max-w-none w-full">
             <PortableText
               value={post.body}
+
               components={{
                 types: {
                   image: ImageComponent,

@@ -126,12 +126,14 @@ export function PaymentForm({
           {/* Adresse de facturation */}
           <div className="space-y-4">
             <h3 className="font-semibold">Adresse de facturation</h3>
-            <AddressElement 
+            <AddressElement
               options={{
                 mode: 'billing',
                 allowedCountries: ['FR', 'BE', 'CH', 'IT', 'ES', 'DE'],
                 defaultValues: {
-                  country: 'FR',
+                  address: {
+                    country: 'FR',
+                  },
                 },
               }}
             />

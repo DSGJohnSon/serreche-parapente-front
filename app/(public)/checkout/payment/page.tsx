@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { StripeProvider } from '@/components/providers/StripeProvider';
 import { PaymentForm } from '@/components/checkout/PaymentForm';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
-export default function PaymentPage() {
+function PaymentPageContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order');
   const clientSecretParam = searchParams.get('client_secret');
@@ -186,5 +186,20 @@ export default function PaymentPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p>Chargement du paiement...</p>
+        </div>
+      </div>
+    }>
+      <PaymentPageContent />
+    </Suspense>
   );
 }

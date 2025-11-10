@@ -5,10 +5,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { LucideMenu } from "lucide-react";
+import { LucideGift, LucideMenu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -57,7 +58,7 @@ export default function PublicLayout({
         </Link>
         {/* Panier */}
         <div className={`z-[70] transition-all duration-300 ${isScrolled ? "fixed right-16 top-2" : "fixed right-20 top-[6vh]"}`}>
-          <CartSidebar />
+          <CartSidebar isScrolled={isScrolled} />
         </div>
 
         <DropdownMenu open={isMenuOpened} onOpenChange={setIsMenuOpened}>
@@ -83,13 +84,14 @@ export default function PublicLayout({
                 Accueil
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
                 setIsMenuOpened(false);
               }}
             >
               <Link href="/bi-places" className="block w-full">
-                Baptême de l'air - BiPlaces
+                Baptêmes
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -98,47 +100,29 @@ export default function PublicLayout({
               }}
             >
               <Link href="/nos-stages" className="block w-full">
-                Nos offres de stages
+                Nos stages
               </Link>
             </DropdownMenuItem>
-            <div className="ml-2 pl-1 border-l-2 border-slate-600">
-              <DropdownMenuItem
-                onClick={() => {
-                  setIsMenuOpened(false);
-                }}
-              >
-                <Link href="/nos-stages/initiation" className="block w-full">
-                  Stage Inititation
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setIsMenuOpened(false);
-                }}
-              >
-                <Link href="/nos-stages/progression" className="block w-full">
-                  Stage Progression
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setIsMenuOpened(false);
-                }}
-              >
-                <Link href="/nos-stages/autonomie" className="block w-full">
-                  Stage Autonomie
-                </Link>
-              </DropdownMenuItem>
-            </div>
             <DropdownMenuItem
               onClick={() => {
                 setIsMenuOpened(false);
               }}
             >
-              <Link href="/" className="block w-full">
-                Réserver mon stage
+              <Link href="/reserver" className="block w-full">
+                Réserver
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setIsMenuOpened(false);
+              }}
+            >
+              <Link href="/reserver/bon-cadeau" className="w-full flex items-center justify-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-md">
+              <LucideGift className="inline mr-2 size-4" />
+                Offrir un bon cadeau
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
                 setIsMenuOpened(false);
