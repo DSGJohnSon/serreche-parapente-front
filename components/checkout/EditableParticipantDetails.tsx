@@ -295,6 +295,19 @@ export function EditableParticipantDetails({
                   <p className="text-red-500 text-xs mt-1">{errors.height.message}</p>
                 )}
               </div>
+
+              <div>
+                <Label htmlFor="birthDate" className="text-xs">Date de naissance</Label>
+                <Input
+                  id="birthDate"
+                  type="date"
+                  {...register('birthDate')}
+                  className="h-9 text-sm"
+                />
+                {errors.birthDate && (
+                  <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>
+                )}
+              </div>
             </div>
           </form>
         </CardContent>

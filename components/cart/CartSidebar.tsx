@@ -9,11 +9,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Trash2, Mountain, Users, Gift, ChevronDown, ChevronUp } from "lucide-react";
+import { ShoppingCart, Trash2, Mountain, Users, Gift, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SessionManager } from "@/lib/sessionManager";
 import { useToast } from "@/components/ui/use-toast";
 import { CartItemCard } from "./CartItemCard";
+import { ReservationStatusBadge } from "./ReservationStatusBadge";
 
 interface CartItem {
   id: string;
@@ -23,6 +24,8 @@ interface CartItem {
   stage?: any;
   bapteme?: any;
   giftCardAmount?: number;
+  expiresAt?: string;
+  createdAt?: string;
 }
 
 export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
@@ -43,8 +46,14 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
 
     window.addEventListener("cartUpdated", handleCartUpdate);
 
+    // Rafraîchir le panier toutes les 30 secondes pour vérifier les expirations
+    const refreshInterval = setInterval(() => {
+      loadCartItems();
+    }, 30000);
+
     return () => {
       window.removeEventListener("cartUpdated", handleCartUpdate);
+      clearInterval(refreshInterval);
     };
   }, []);
 
@@ -65,7 +74,25 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
 
       const data = await response.json();
       if (data.success) {
-        setCartItems(data.data.items);
+        // Filtrer les items expirés côté client (le backend devrait aussi le faire)
+        const now = new Date().getTime();
+        const validItems = data.data.items.filter((item: CartItem) => {
+          if ((item.type === 'STAGE' || item.type === 'BAPTEME') && item.expiresAt) {
+            return new Date(item.expiresAt).getTime() > now;
+          }
+          return true;
+        });
+
+        // Si des items ont été filtrés, afficher un toast
+        if (validItems.length < data.data.items.length) {
+          toast({
+            title: "Places expirées",
+            description: "Certaines places réservées ont expiré et ont été retirées de votre panier.",
+            variant: "destructive",
+          });
+        }
+
+        setCartItems(validItems);
         setTotalAmount(data.data.totalAmount);
       }
     } catch (error) {
@@ -241,7 +268,9 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-800">Votre panier</h2>
-                <p className="text-sm text-gray-600">{cartItems.length} article{cartItems.length > 1 ? 's' : ''}</p>
+                <p className="text-sm text-gray-600">
+                  {cartItems.length} article{cartItems.length > 1 ? 's' : ''}
+                </p>
               </div>
             </div>
             {cartItems.length > 0 && (
@@ -362,6 +391,46 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
           {/* Footer avec total et checkout */}
           {cartItems.length > 0 && (
             <div className="border-t border-gray-200 pt-6 space-y-4">
+              {/* Avertissement avec timer global si des places temporaires */}
+              {cartItems.some(item => (item.type === 'STAGE' || item.type === 'BAPTEME') && item.expiresAt) && (
+                <div className="space-y-3">
+                  {/* Timer global - affiche le temps restant le plus court */}
+                  {(() => {
+                    const tempItems = cartItems.filter(item =>
+                      (item.type === 'STAGE' || item.type === 'BAPTEME') && item.expiresAt
+                    );
+                    if (tempItems.length > 0) {
+                      // Trouver l'item qui expire le plus tôt
+                      const earliestExpiry = tempItems.reduce((earliest, item) => {
+                        const itemExpiry = new Date(item.expiresAt!).getTime();
+                        return itemExpiry < earliest ? itemExpiry : earliest;
+                      }, new Date(tempItems[0].expiresAt!).getTime());
+                      
+                      const earliestItem = tempItems.find(item =>
+                        new Date(item.expiresAt!).getTime() === earliestExpiry
+                      );
+                      
+                      return earliestItem ? (
+                        <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-lg p-4 shadow-sm">
+                          <div className="flex items-center gap-3">
+                            <Clock className="w-6 h-6 text-orange-600 flex-shrink-0 animate-pulse" />
+                            <div className="flex-1">
+                              <p className="font-bold text-orange-900 text-sm mb-1">
+                                Places temporairement bloquées
+                              </p>
+                              <p className="text-xs text-orange-800">
+                                Finalisez votre paiement rapidement pour confirmer vos réservations.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null;
+                    }
+                    return null;
+                  })()}
+                </div>
+              )}
+
               <div className="bg-slate-100 rounded-lg p-4 border border-slate-400">
                 <div className="flex justify-between items-center">
                   <div>
@@ -374,7 +443,7 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
                 </div>
               </div>
 
-              <div className="space-y-2">                
+              <div className="space-y-2">
                 <Button
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
                   size="lg"
@@ -384,7 +453,7 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
                   }}
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
-                  Procéder au paiement
+                  Voir mon panier en détail
                 </Button>
               </div>
             </div>

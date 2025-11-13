@@ -323,6 +323,8 @@ function BaptemeReservationPageContent() {
   const handleSlotSelect = (slot: Bapteme) => {
     setSelectedSlot(slot);
     setShowForm(true);
+    // Initialiser participantType à "self" par défaut
+    setValue("participantType", "self");
     // Scroll vers le formulaire
     setTimeout(() => {
       const formElement = document.getElementById("participant-form-separator");
@@ -386,6 +388,13 @@ function BaptemeReservationPageContent() {
       if (result.success) {
         // Déclencher un événement pour rafraîchir le panier
         window.dispatchEvent(new CustomEvent("cartUpdated"));
+
+        // Afficher un toast informatif sur le blocage de la place
+        toast({
+          title: "Place réservée temporairement",
+          description: "Cette place est bloquée pendant 1h00. Finalisez votre paiement pour confirmer la réservation.",
+          duration: 5000,
+        });
 
         // Afficher la popup de confirmation
         setShowSuccessDialog(true);
@@ -892,6 +901,23 @@ function BaptemeReservationPageContent() {
                           )}
                         </div>
                       </div>
+                      
+                      <div>
+                        <Label htmlFor="birthDate">Date de naissance *</Label>
+                        <Input
+                          id="birthDate"
+                          type="date"
+                          {...register("birthDate", {
+                            required: "Date de naissance requise",
+                          })}
+                          className="mt-1"
+                        />
+                        {errors.birthDate && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.birthDate.message}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Contact */}
@@ -1149,12 +1175,19 @@ function BaptemeReservationPageContent() {
               </div>
             </div>
             <DialogTitle className="text-center text-2xl">
-              Ajouté au panier !
+              Place réservée !
             </DialogTitle>
-            <DialogDescription className="text-center text-base">
-              Votre baptême a été ajouté avec succès à votre panier.
-              <br />
-              Que souhaitez-vous faire ?
+            <DialogDescription className="text-center text-base space-y-2">
+              <p className="font-semibold text-slate-800">
+                Votre place est bloquée pendant 1h00
+              </p>
+              <p className="text-sm">
+                Cette place est temporairement réservée pour vous. Finalisez votre paiement dans l'heure pour confirmer votre réservation.
+              </p>
+              <div className="flex items-center justify-center gap-2 text-orange-600 bg-orange-50 p-2 rounded-lg mt-3">
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">Temps restant: 60:00</span>
+              </div>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col gap-2 mt-4">

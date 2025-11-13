@@ -31,6 +31,7 @@ import {
   Trash2,
   AlertTriangle,
   Info,
+  Clock,
 } from "lucide-react";
 import {
   Tooltip,
@@ -50,6 +51,8 @@ interface CartItem {
   stage?: any;
   bapteme?: any;
   giftCardAmount?: number;
+  expiresAt?: string;
+  createdAt?: string;
 }
 
 interface CheckoutFormData {
@@ -62,6 +65,86 @@ interface CheckoutFormData {
   city: string;
   country: string;
   giftCardCode?: string;
+}
+
+// Composant Timer pour les réservations temporaires
+function ReservationTimer({ cartItems, compact = false }: { cartItems: CartItem[], compact?: boolean }) {
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    const tempItems = cartItems.filter(item =>
+      (item.type === 'STAGE' || item.type === 'BAPTEME') && item.expiresAt
+    );
+
+    if (tempItems.length === 0) return;
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const earliestExpiry = tempItems.reduce((earliest, item) => {
+        const itemExpiry = new Date(item.expiresAt!).getTime();
+        return itemExpiry < earliest ? itemExpiry : earliest;
+      }, new Date(tempItems[0].expiresAt!).getTime());
+
+      const remaining = earliestExpiry - now;
+      setTimeRemaining(remaining > 0 ? remaining : 0);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [cartItems]);
+
+  const formatTimeRemaining = (ms: number) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  if (timeRemaining === null) return null;
+
+  const isUrgent = timeRemaining < 300000; // Moins de 5 minutes
+
+  if (compact) {
+    return (
+      <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-xl p-4 shadow-lg">
+        <div className="flex items-start gap-3">
+          <Clock className="w-6 h-6 text-orange-600 mt-0.5 flex-shrink-0 animate-pulse" />
+          <div className="flex-1">
+            <p className="font-bold text-orange-900 text-sm mb-1">
+              Places temporairement bloquées
+            </p>
+            <p className="text-xs text-orange-800">
+              Finalisez votre paiement rapidement. Temps restant : <span className={`font-bold ${isUrgent ? 'text-red-700' : 'text-orange-900'}`}>{formatTimeRemaining(timeRemaining)}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-xl p-6 shadow-lg">
+      <div className="flex items-start gap-4">
+        <div className="p-3 bg-orange-100 rounded-full">
+          <Clock className="w-8 h-8 text-orange-600 animate-pulse" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-bold text-orange-900 text-lg mb-2">
+            Places temporairement bloquées
+          </h3>
+          <p className="text-sm text-orange-800 mb-2">
+            Vos places sont réservées temporairement. Finalisez votre paiement rapidement pour confirmer vos réservations.
+          </p>
+          <div className="inline-flex items-center gap-2">
+            <span className="text-sm text-orange-800 flex items-center gap-2 border-l-2 border-orange-400 pl-3">
+              Temps restant : <span className={`font-bold text-lg ${isUrgent ? 'text-red-700' : 'text-orange-900'}`}>{formatTimeRemaining(timeRemaining)}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function CheckoutPage() {
@@ -579,7 +662,12 @@ export default function CheckoutPage() {
 
         {step === "cart" ? (
           // STEP 1: Cart Summary Only
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Bannière d'avertissement pour les places temporaires */}
+            {cartItems.some(item => (item.type === 'STAGE' || item.type === 'BAPTEME') && item.expiresAt) && (
+              <ReservationTimer cartItems={cartItems} />
+            )}
+
             {/* Récapitulatif commande */}
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-6">
@@ -857,27 +945,46 @@ export default function CheckoutPage() {
                 })}
 
                 <div className="pt-4 border-t border-gray-200 space-y-4">
+                  {/* Prix total - légèrement mis en valeur */}
+                  <div className="bg-slate-100 rounded-lg p-4 border border-slate-300">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-xs text-slate-600 uppercase tracking-wide">
+                          Prix total
+                        </p>
+                        <p className="text-xl font-bold text-slate-800">
+                          {totalAmount.toFixed(2)}€
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5">Tous produits confondus • TVA incluse</p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Détail des paiements */}
-                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2">
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3">
                     <h3 className="font-semibold text-sm text-slate-800 mb-3">
                       Détail des paiements
                     </h3>
 
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">
-                        À payer aujourd'hui
-                      </span>
-                      <span className="font-semibold text-slate-800">
-                        {calculateTotals().depositTotal.toFixed(2)}€
-                      </span>
+                    {/* À payer aujourd'hui */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm font-semibold">
+                        <span className="text-slate-700">
+                          À payer aujourd'hui
+                        </span>
+                        <span className="text-slate-800">
+                          {(calculateTotals().originalDepositTotal || calculateTotals().depositTotal).toFixed(2)}€
+                        </span>
+                      </div>
                     </div>
 
+                    {/* Paiements futurs */}
                     {calculateTotals().remainingTotal > 0 && (
                       <>
-                        <Separator className="my-2" />
+                        <Separator className="my-3" />
                         <div className="space-y-2">
-                          <p className="text-xs font-medium text-slate-700">
-                            Paiements futurs :
+                          <p className="text-sm font-semibold text-slate-700">
+                            Règlements futurs
                           </p>
                           {calculateTotals().futurePayments.map(
                             (payment, index) => (
@@ -885,9 +992,11 @@ export default function CheckoutPage() {
                                 key={index}
                                 className="flex justify-between text-xs pl-3"
                               >
-                                <span className="text-slate-500">
-                                  {payment.description} -{" "}
-                                  {formatDate(payment.date)}
+                                <span className="text-slate-600">
+                                  {payment.description}
+                                  <span className="block text-slate-500 mt-0.5">
+                                    À régler sur place le <span className="underline">{formatDate(payment.date)}</span>
+                                  </span>
                                 </span>
                                 <span className="font-medium text-slate-700">
                                   {payment.amount.toFixed(2)}€
@@ -895,41 +1004,32 @@ export default function CheckoutPage() {
                               </div>
                             )
                           )}
-                        </div>
-                        <Separator className="my-2" />
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">Total restant</span>
-                          <span className="font-semibold text-slate-800">
-                            {calculateTotals().remainingTotal.toFixed(2)}€
-                          </span>
+                          <div className="flex justify-between text-sm font-semibold pt-2 border-t border-slate-300">
+                            <span className="text-slate-700">Total des paiements à venir</span>
+                            <span className="text-slate-800">
+                              {calculateTotals().remainingTotal.toFixed(2)}€
+                            </span>
+                          </div>
                         </div>
                       </>
                     )}
                   </div>
+                </div>
 
-                  {/* Total à payer aujourd'hui */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                {/* Prix total à régler aujourd'hui - un peu plus légèrement mis en valeur */}
+                  <div className="bg-blue-100 rounded-lg p-4 border border-blue-300">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm text-gray-600">
-                          À payer aujourd'hui
+                        <p className="text-xs text-blue-600 uppercase font-semibold tracking-wide">
+                          à régler aujourd'hui
                         </p>
-                        <p className="text-2xl font-bold text-blue-600">
-                          {calculateTotals().depositTotal.toFixed(2)}€
+                        <p className="text-xl font-bold text-blue-600">
+                          {calculateTotals().remainingTotal.toFixed(2)}€
                         </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">TVA incluse</p>
-                        {calculateTotals().remainingTotal > 0 && (
-                          <p className="text-xs text-orange-600 font-medium mt-1">
-                            + {calculateTotals().remainingTotal.toFixed(2)}€ à
-                            régler plus tard
-                          </p>
-                        )}
+                        <p className="text-xs text-slate-500 mt-0.5">Tous produits confondus • TVA incluse</p>
                       </div>
                     </div>
                   </div>
-                </div>
 
                 {/* Info bon cadeau */}
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
@@ -963,8 +1063,14 @@ export default function CheckoutPage() {
           // STEP 2: Customer Information Form
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Récapitulatif commande - Version compacte */}
-            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm h-fit">
-              <CardHeader className="pb-4">
+            <div className="space-y-6">
+              {/* Bannière d'avertissement pour les places temporaires */}
+              {cartItems.some(item => (item.type === 'STAGE' || item.type === 'BAPTEME') && item.expiresAt) && (
+                <ReservationTimer cartItems={cartItems} compact />
+              )}
+
+              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm h-fit">
+                <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <ShoppingCart className="w-5 h-5 text-blue-600" />
@@ -981,177 +1087,189 @@ export default function CheckoutPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Section bon cadeau */}
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Gift className="w-5 h-5 text-green-600" />
-                    <h3 className="font-semibold text-sm text-green-800">
-                      Bon cadeau
-                    </h3>
-                  </div>
-
-                  {!appliedGiftCard ? (
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          value={giftCardCode}
-                          onChange={(e) =>
-                            setGiftCardCode(e.target.value.toUpperCase())
-                          }
-                          placeholder="SCP-XXXXX-XXXX"
-                          className="flex-1"
-                          disabled={isValidatingGiftCard}
-                        />
-                        <Button
-                          onClick={validateGiftCard}
-                          disabled={
-                            isValidatingGiftCard || !giftCardCode.trim()
-                          }
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          {isValidatingGiftCard ? "Validation..." : "Appliquer"}
-                        </Button>
-                      </div>
-                      <p className="text-xs text-green-700">
-                        Entrez votre code pour réduire le montant à payer
+                {/* Prix total - légèrement mis en valeur */}
+                <div className="bg-slate-100 rounded-lg p-4 border border-slate-300">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-xs text-slate-600 uppercase tracking-wide">
+                        Prix total
                       </p>
+                      <p className="text-xl font-bold text-slate-800">
+                        {totalAmount.toFixed(2)}€
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">Tous produits confondus • TVA incluse</p>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="bg-white rounded p-3 border border-green-300">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-green-800">
-                            Code: {appliedGiftCard.code}
-                          </span>
-                          <Button
-                            onClick={removeGiftCard}
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-auto p-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <div className="space-y-1 text-xs">
-                          <div className="flex justify-between text-green-700">
-                            <span>Montant utilisé:</span>
-                            <span className="font-semibold">
-                              -{appliedGiftCard.usedAmount.toFixed(2)}€
-                            </span>
-                          </div>
-                          {appliedGiftCard.remainingAmount > 0 && (
-                            <div className="flex justify-between text-green-600">
-                              <span>Reste sur le bon:</span>
-                              <span className="font-semibold">
-                                {appliedGiftCard.remainingAmount.toFixed(2)}€
-                              </span>
-                            </div>
-                          )}
-                          {appliedGiftCard.remainingAmount === 0 && (
-                            <p className="text-green-600 font-medium">
-                              ✓ Bon cadeau entièrement utilisé
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
 
                 <Separator />
 
                 {/* Détail des paiements */}
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2">
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3">
                   <h3 className="font-semibold text-sm text-slate-800 mb-3">
                     Détail des paiements
                   </h3>
 
-                  {appliedGiftCard && (
-                    <>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-600">Sous-total</span>
-                        <span className="text-slate-600">
-                          {(
-                            calculateTotals().originalDepositTotal ||
-                            calculateTotals().depositTotal
-                          ).toFixed(2)}
-                          €
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-green-600">Bon cadeau</span>
-                        <span className="text-green-600 font-semibold">
-                          -{appliedGiftCard.usedAmount.toFixed(2)}€
-                        </span>
-                      </div>
-                      <Separator className="my-2" />
-                    </>
-                  )}
-
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">À payer aujourd'hui</span>
-                    <span className="font-semibold text-slate-800">
-                      {calculateTotals().depositTotal.toFixed(2)}€
-                    </span>
-                  </div>
-
-                  {calculateTotals().remainingTotal > 0 && (
-                    <>
-                      <Separator className="my-2" />
-                      <div className="space-y-2">
-                        <p className="text-xs font-medium text-slate-700">
-                          Paiements futurs :
-                        </p>
-                        {calculateTotals().futurePayments.map(
-                          (payment, index) => (
-                            <div
-                              key={index}
-                              className="flex justify-between text-xs pl-3"
-                            >
-                              <span className="text-slate-500">
-                                {payment.description} -{" "}
-                                {formatDate(payment.date)}
-                              </span>
-                              <span className="font-medium text-slate-700">
-                                {payment.amount.toFixed(2)}€
-                              </span>
-                            </div>
-                          )
-                        )}
-                      </div>
-                      <Separator className="my-2" />
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-600">Total restant</span>
-                        <span className="font-semibold text-slate-800">
-                          {calculateTotals().remainingTotal.toFixed(2)}€
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Total à payer aujourd'hui */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm text-gray-600">
+                  {/* À payer aujourd'hui */}
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-slate-700">
                         À payer aujourd'hui
                       </p>
-                      <p className="text-2xl font-bold text-blue-600">
-                        {calculateTotals().depositTotal.toFixed(2)}€
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500">TVA incluse</p>
-                      {calculateTotals().remainingTotal > 0 && (
-                        <p className="text-xs text-orange-600 font-medium mt-1">
-                          + {calculateTotals().remainingTotal.toFixed(2)}€ à
-                          régler plus tard
-                        </p>
-                      )}
+                      
+                      <div className="pl-3 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">Prix à régler</span>
+                          <span className="text-slate-800">
+                            {(calculateTotals().originalDepositTotal || calculateTotals().depositTotal).toFixed(2)}€
+                          </span>
+                        </div>
+
+                        {/* Section bon cadeau */}
+                        {!appliedGiftCard ? (
+                          <div className="bg-green-50 rounded-lg p-3 border border-green-200 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Gift className="w-4 h-4 text-green-600" />
+                              <h4 className="font-medium text-xs text-green-800">
+                                Appliquer un bon cadeau
+                              </h4>
+                            </div>
+                            <div className="flex gap-2">
+                              <Input
+                                value={giftCardCode}
+                                onChange={(e) =>
+                                  setGiftCardCode(e.target.value.toUpperCase())
+                                }
+                                placeholder="SCP-XXXXX-XXXX"
+                                className="flex-1 h-8 text-sm"
+                                disabled={isValidatingGiftCard}
+                              />
+                              <Button
+                                onClick={validateGiftCard}
+                                disabled={
+                                  isValidatingGiftCard || !giftCardCode.trim()
+                                }
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 h-8"
+                              >
+                                {isValidatingGiftCard ? "..." : "Appliquer"}
+                              </Button>
+                            </div>
+                            <p className="text-xs text-green-700">
+                              Entrez votre code pour réduire le montant à payer
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Bon(s) cadeau(x) appliqué(s) */}
+                            <div className="bg-green-50 rounded p-2 border border-green-200">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium text-green-800 flex items-center gap-1">
+                                  <Gift className="w-3 h-3" />
+                                  Bon cadeau: {appliedGiftCard.code}
+                                </span>
+                                <Button
+                                  onClick={removeGiftCard}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 h-auto p-1"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-green-700">Montant déduit:</span>
+                                <span className="font-semibold text-green-700">
+                                  -{appliedGiftCard.usedAmount.toFixed(2)}€
+                                </span>
+                              </div>
+                              {appliedGiftCard.remainingAmount > 0 && (
+                                <div className="flex justify-between text-xs mt-1 pt-1 border-t border-green-200">
+                                  <span className="text-green-600">Reste sur le bon:</span>
+                                  <span className="font-semibold text-green-600">
+                                    {appliedGiftCard.remainingAmount.toFixed(2)}€
+                                  </span>
+                                </div>
+                              )}
+                              {appliedGiftCard.remainingAmount === 0 && (
+                                <p className="text-xs text-green-600 font-medium mt-1">
+                                  ✓ Bon cadeau entièrement utilisé
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Reste à payer aujourd'hui - MIS EN VALEUR */}
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-300 mt-2">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <p className="text-xs text-blue-700 uppercase tracking-wide">
+                                    Reste à payer aujourd'hui
+                                  </p>
+                                  <p className="text-2xl font-bold text-blue-600">
+                                    {calculateTotals().depositTotal.toFixed(2)}€
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Si pas de bon cadeau, afficher le total à payer aujourd'hui - MIS EN VALEUR */}
+                        {!appliedGiftCard && (
+                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-300 mt-2">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="text-xs text-blue-700 uppercase tracking-wide">
+                                  À payer aujourd'hui
+                                </p>
+                                <p className="text-2xl font-bold text-blue-600">
+                                  {calculateTotals().depositTotal.toFixed(2)}€
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Paiements futurs */}
+                  {calculateTotals().remainingTotal > 0 && (
+                    <>
+                      <Separator className="my-3" />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-slate-700">
+                          Règlements futurs
+                        </p>
+                        <div className="pl-3 space-y-2">
+                          {calculateTotals().futurePayments.map(
+                            (payment, index) => (
+                              <div
+                                key={index}
+                                className="flex justify-between text-xs"
+                              >
+                                <span className="text-slate-600">
+                                  {payment.description}
+                                  <span className="block text-slate-500 mt-0.5">
+                                    À régler sur place le {formatDate(payment.date)}
+                                  </span>
+                                </span>
+                                <span className="font-medium text-slate-700">
+                                  {payment.amount.toFixed(2)}€
+                                </span>
+                              </div>
+                            )
+                          )}
+                          <div className="flex justify-between text-sm font-semibold pt-2 border-t border-slate-300">
+                            <span className="text-slate-700">Total des paiements à venir</span>
+                            <span className="text-slate-800">
+                              {calculateTotals().remainingTotal.toFixed(2)}€
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <Button
@@ -1163,7 +1281,8 @@ export default function CheckoutPage() {
                   Modifier mon panier
                 </Button>
               </CardContent>
-            </Card>
+              </Card>
+            </div>
 
             {/* Formulaire de commande */}
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
