@@ -16,6 +16,7 @@ function PaymentPageContent() {
   
   const [order, setOrder] = useState<any>(null);
   const [clientSecret, setClientSecret] = useState<string>(clientSecretParam || '');
+  const [remainingPayments, setRemainingPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const { toast } = useToast();
@@ -39,14 +40,60 @@ function PaymentPageContent() {
       const data = await response.json();
       
       if (data.success) {
-        setOrder(data.data);
+        const orderData = data.data;
         
-        // Si pas de client secret dans l'URL, essayer de le récupérer
-        if (!clientSecretParam) {
-          const lastPayment = data.data.payments?.[data.data.payments.length - 1];
-          if (lastPayment?.stripePaymentIntentId) {
-            setClientSecret(lastPayment.stripePaymentIntentId + '_secret_test');
+        // Calculer depositAmount et remainingAmount à partir des orderItems
+        let depositAmount = 0;
+        let remainingAmount = 0;
+        const remainingPaymentsList: any[] = [];
+        
+        orderData.orderItems?.forEach((item: any) => {
+          if (item.type === 'STAGE' && item.stage) {
+            // Pour les stages : acompte
+            const stageDeposit = item.stage.acomptePrice || Math.round(item.stage.price * 0.33);
+            depositAmount += stageDeposit;
+            
+            // Calculer le reste à payer
+            const remaining = item.stage.price - stageDeposit;
+            if (remaining > 0) {
+              remainingAmount += remaining;
+              remainingPaymentsList.push({
+                stageId: item.stage.id,
+                stageType: item.stage.type,
+                stageStartDate: item.stage.startDate,
+                remainingAmount: remaining,
+                dueDate: item.stage.startDate,
+                participantName: `${item.participantData?.firstName || ''} ${item.participantData?.lastName || ''}`.trim()
+              });
+            }
+          } else {
+            // Pour les baptêmes et bons cadeaux : paiement complet
+            depositAmount += item.totalPrice;
           }
+        });
+        
+        // Appliquer la réduction des bons cadeaux sur le depositAmount
+        if (orderData.discountAmount > 0) {
+          depositAmount = Math.max(0, depositAmount - orderData.discountAmount);
+        }
+        
+        // Ajouter les montants calculés à l'objet order
+        const enrichedOrder = {
+          ...orderData,
+          depositAmount,
+          remainingAmount
+        };
+        
+        setOrder(enrichedOrder);
+        setRemainingPayments(remainingPaymentsList);
+        
+        // Le clientSecret doit venir de l'URL, pas être reconstruit
+        if (!clientSecretParam) {
+          toast({
+            title: "Erreur",
+            description: "Client secret manquant. Veuillez recommencer le processus de paiement.",
+            variant: "destructive",
+          });
         }
       } else {
         toast({
@@ -134,7 +181,7 @@ function PaymentPageContent() {
           <p className="text-gray-600">Finalisez votre réservation</p>
         </div>
 
-        {/* Récapitulatif rapide */}
+        {/* Récapitulatif de la commande */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -142,19 +189,120 @@ function PaymentPageContent() {
               Commande {order.orderNumber}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center">
-              <div>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-600">Client: {order.customerEmail}</p>
+              {order.orderItems && (
                 <p className="text-sm text-gray-600">{order.orderItems.length} article(s)</p>
-                <p className="text-sm text-gray-600">Client: {order.customerEmail}</p>
+              )}
+            </div>
+
+            {/* Détails des montants */}
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Sous-total</span>
+                <span>{(order.subtotal || order.totalAmount).toFixed(2)}€</span>
               </div>
-              <div className="text-right">
-                {order.discountAmount > 0 && (
-                  <p className="text-sm text-green-600">-{order.discountAmount}€ (bon cadeau)</p>
-                )}
-                <p className="text-xl font-bold">{order.totalAmount.toFixed(2)}€</p>
+              
+              {order.discountAmount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Bons cadeaux appliqués</span>
+                  <span>-{order.discountAmount.toFixed(2)}€</span>
+                </div>
+              )}
+              
+              <div className="flex justify-between font-semibold pt-2 border-t">
+                <span>Total de la commande</span>
+                <span>{order.totalAmount.toFixed(2)}€</span>
               </div>
             </div>
+
+            {/* Montant à payer aujourd'hui - MIS EN VALEUR */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border-2 border-blue-300">
+              <div>
+                <p className="text-xs text-blue-700 uppercase font-semibold tracking-wide mb-2">
+                  À payer aujourd'hui
+                </p>
+                <p className="text-2xl font-bold text-blue-600 mb-3">
+                  {(order.depositAmount || order.totalAmount).toFixed(2)}€
+                </p>
+                
+                {/* Détail des items inclus dans le paiement */}
+                <div className="space-y-1">
+                  {order.orderItems?.map((item: any, index: number) => {
+                    const participantName = `${item.participantData?.firstName || ''} ${item.participantData?.lastName || ''}`.trim();
+                    
+                    if (item.type === 'STAGE' && item.stage) {
+                      const stageDate = new Date(item.stage.startDate).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      });
+                      return (
+                        <p key={index} className="text-xs text-gray-700">
+                          • Acompte du stage {item.stage.type} pour {participantName} le {stageDate}
+                        </p>
+                      );
+                    } else if (item.type === 'BAPTEME' && item.bapteme) {
+                      const baptemeDate = new Date(item.bapteme.date).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      });
+                      const category = item.participantData?.selectedCategory || '';
+                      return (
+                        <p key={index} className="text-xs text-gray-700">
+                          • Baptême {category} pour {participantName} le {baptemeDate}
+                        </p>
+                      );
+                    } else if (item.type === 'GIFT_CARD') {
+                      const recipientName = item.participantData?.recipientName || 'destinataire';
+                      return (
+                        <p key={index} className="text-xs text-gray-700">
+                          • Bon cadeau pour {recipientName}
+                        </p>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Paiements restants */}
+            {order.remainingAmount > 0 && remainingPayments.length > 0 && (
+              <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                <h4 className="font-semibold text-sm text-orange-900 mb-2">
+                  Paiements à venir :
+                </h4>
+                <p className="text-sm text-orange-800">
+                  Solde total à venir : <strong>{order.remainingAmount.toFixed(2)}€</strong>
+                </p>
+                <p className='text-xs text-orange-700 mb-3'>Les soldes de stages seront à régler sur place le jour du stage.</p>
+                
+                <div className="space-y-2">
+                  {remainingPayments.map((payment, index) => (
+                    <div key={index} className="text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-orange-700">
+                          Solde du stage {payment.stageType} pour {payment.participantName}
+                        </span>
+                        <span className="font-medium text-orange-900">
+                          {payment.remainingAmount.toFixed(2)}€
+                        </span>
+                      </div>
+                      <p className="text-xs text-orange-600">
+                        À régler <span className='font-semibold underline'>sur place</span> le {new Date(payment.stageStartDate).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -165,7 +313,7 @@ function PaymentPageContent() {
               clientSecret={clientSecret}
               orderId={order.id}
               orderNumber={order.orderNumber}
-              totalAmount={order.totalAmount}
+              totalAmount={order.depositAmount || order.totalAmount}
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}
             />

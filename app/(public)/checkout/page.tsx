@@ -163,12 +163,12 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<"cart" | "customer-info">("cart");
   const [giftCardCode, setGiftCardCode] = useState("");
   const [isValidatingGiftCard, setIsValidatingGiftCard] = useState(false);
-  const [appliedGiftCard, setAppliedGiftCard] = useState<{
+  const [appliedGiftCards, setAppliedGiftCards] = useState<{
     code: string;
     originalAmount: number;
     usedAmount: number;
     remainingAmount: number;
-  } | null>(null);
+  }[]>([]);
   const {
     register,
     handleSubmit,
@@ -356,13 +356,14 @@ export default function CheckoutPage() {
       }
     });
 
-    // Appliquer le bon cadeau si présent
+    // Appliquer les bons cadeaux si présents
     let finalDepositTotal = depositTotal;
-    if (appliedGiftCard) {
-      finalDepositTotal = Math.max(
-        0,
-        depositTotal - appliedGiftCard.usedAmount
+    if (appliedGiftCards.length > 0) {
+      const totalGiftCardAmount = appliedGiftCards.reduce(
+        (sum, card) => sum + card.usedAmount,
+        0
       );
+      finalDepositTotal = Math.max(0, depositTotal - totalGiftCardAmount);
     }
 
     return {
@@ -378,6 +379,16 @@ export default function CheckoutPage() {
       toast({
         title: "Erreur",
         description: "Veuillez entrer un code de bon cadeau",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Vérifier si le code n'est pas déjà appliqué
+    if (appliedGiftCards.some(card => card.code === giftCardCode)) {
+      toast({
+        title: "Bon cadeau déjà appliqué",
+        description: "Ce bon cadeau est déjà utilisé dans cette commande",
         variant: "destructive",
       });
       return;
@@ -406,18 +417,23 @@ export default function CheckoutPage() {
 
       if (data.success && data.data.giftCard) {
         const giftCard = data.data.giftCard;
-        const orderTotal =
-          calculateTotals().originalDepositTotal ||
-          calculateTotals().depositTotal;
-        const usedAmount = Math.min(giftCard.remainingAmount, orderTotal);
+        
+        // Calculer le montant restant à payer après les bons cadeaux déjà appliqués
+        const currentTotal = calculateTotals().originalDepositTotal || calculateTotals().depositTotal;
+        const alreadyDeducted = appliedGiftCards.reduce((sum, card) => sum + card.usedAmount, 0);
+        const remainingToPay = currentTotal - alreadyDeducted;
+        
+        const usedAmount = Math.min(giftCard.remainingAmount, remainingToPay);
         const remainingAmount = giftCard.remainingAmount - usedAmount;
 
-        setAppliedGiftCard({
+        setAppliedGiftCards([...appliedGiftCards, {
           code: giftCard.code,
           originalAmount: giftCard.remainingAmount,
           usedAmount,
           remainingAmount,
-        });
+        }]);
+
+        setGiftCardCode("");
 
         toast({
           title: "Bon cadeau appliqué !",
@@ -443,9 +459,8 @@ export default function CheckoutPage() {
     }
   };
 
-  const removeGiftCard = () => {
-    setAppliedGiftCard(null);
-    setGiftCardCode("");
+  const removeGiftCard = (codeToRemove: string) => {
+    setAppliedGiftCards(appliedGiftCards.filter(card => card.code !== codeToRemove));
     toast({
       title: "Bon cadeau retiré",
       description: "Le bon cadeau a été retiré de votre commande",
@@ -556,7 +571,7 @@ export default function CheckoutPage() {
           },
           body: JSON.stringify({
             customerEmail: data.email,
-            appliedGiftCardCode: appliedGiftCard?.code,
+            appliedGiftCardCodes: appliedGiftCards.map(card => card.code),
             customerData: {
               firstName: data.firstName,
               lastName: data.lastName,
@@ -1024,7 +1039,7 @@ export default function CheckoutPage() {
                           à régler aujourd'hui
                         </p>
                         <p className="text-xl font-bold text-blue-600">
-                          {calculateTotals().remainingTotal.toFixed(2)}€
+                          {(calculateTotals().originalDepositTotal || calculateTotals().depositTotal).toFixed(2)}€
                         </p>
                         <p className="text-xs text-slate-500 mt-0.5">Tous produits confondus • TVA incluse</p>
                       </div>
@@ -1126,109 +1141,97 @@ export default function CheckoutPage() {
                         </div>
 
                         {/* Section bon cadeau */}
-                        {!appliedGiftCard ? (
-                          <div className="bg-green-50 rounded-lg p-3 border border-green-200 space-y-2">
-                            <div className="flex items-center gap-2">
-                              <Gift className="w-4 h-4 text-green-600" />
-                              <h4 className="font-medium text-xs text-green-800">
-                                Appliquer un bon cadeau
-                              </h4>
-                            </div>
-                            <div className="flex gap-2">
-                              <Input
-                                value={giftCardCode}
-                                onChange={(e) =>
-                                  setGiftCardCode(e.target.value.toUpperCase())
-                                }
-                                placeholder="SCP-XXXXX-XXXX"
-                                className="flex-1 h-8 text-sm"
-                                disabled={isValidatingGiftCard}
-                              />
-                              <Button
-                                onClick={validateGiftCard}
-                                disabled={
-                                  isValidatingGiftCard || !giftCardCode.trim()
-                                }
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 h-8"
-                              >
-                                {isValidatingGiftCard ? "..." : "Appliquer"}
-                              </Button>
-                            </div>
-                            <p className="text-xs text-green-700">
-                              Entrez votre code pour réduire le montant à payer
-                            </p>
+                        <div className="bg-green-50 rounded-lg p-3 border border-green-200 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Gift className="w-4 h-4 text-green-600" />
+                            <h4 className="font-medium text-xs text-green-800">
+                              Appliquer un bon cadeau
+                            </h4>
                           </div>
-                        ) : (
-                          <>
-                            {/* Bon(s) cadeau(x) appliqué(s) */}
-                            <div className="bg-green-50 rounded p-2 border border-green-200">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs font-medium text-green-800 flex items-center gap-1">
-                                  <Gift className="w-3 h-3" />
-                                  Bon cadeau: {appliedGiftCard.code}
-                                </span>
-                                <Button
-                                  onClick={removeGiftCard}
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 h-auto p-1"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              </div>
-                              <div className="flex justify-between text-xs">
-                                <span className="text-green-700">Montant déduit:</span>
-                                <span className="font-semibold text-green-700">
-                                  -{appliedGiftCard.usedAmount.toFixed(2)}€
-                                </span>
-                              </div>
-                              {appliedGiftCard.remainingAmount > 0 && (
-                                <div className="flex justify-between text-xs mt-1 pt-1 border-t border-green-200">
-                                  <span className="text-green-600">Reste sur le bon:</span>
-                                  <span className="font-semibold text-green-600">
-                                    {appliedGiftCard.remainingAmount.toFixed(2)}€
+                          <div className="flex gap-2">
+                            <Input
+                              value={giftCardCode}
+                              onChange={(e) =>
+                                setGiftCardCode(e.target.value.toUpperCase())
+                              }
+                              placeholder="SCP-XXXXX-XXXX"
+                              className="flex-1 h-8 text-sm"
+                              disabled={isValidatingGiftCard}
+                            />
+                            <Button
+                              onClick={validateGiftCard}
+                              disabled={
+                                isValidatingGiftCard || !giftCardCode.trim()
+                              }
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 h-8"
+                            >
+                              {isValidatingGiftCard ? "..." : "Appliquer"}
+                            </Button>
+                          </div>
+                          <p className="text-xs text-green-700">
+                            {appliedGiftCards.length > 0
+                              ? "Vous pouvez ajouter plusieurs bons cadeaux"
+                              : "Entrez votre code pour réduire le montant à payer"}
+                          </p>
+                        </div>
+
+                        {/* Bons cadeaux appliqués */}
+                        {appliedGiftCards.length > 0 && (
+                          <div className="space-y-2">
+                            {appliedGiftCards.map((giftCard) => (
+                              <div key={giftCard.code} className="bg-green-50 rounded p-2 border border-green-200">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs font-medium text-green-800 flex items-center gap-1">
+                                    <Gift className="w-3 h-3" />
+                                    Bon cadeau: {giftCard.code}
+                                  </span>
+                                  <Button
+                                    onClick={() => removeGiftCard(giftCard.code)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 h-auto p-1"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-green-700">Montant déduit:</span>
+                                  <span className="font-semibold text-green-700">
+                                    -{giftCard.usedAmount.toFixed(2)}€
                                   </span>
                                 </div>
-                              )}
-                              {appliedGiftCard.remainingAmount === 0 && (
-                                <p className="text-xs text-green-600 font-medium mt-1">
-                                  ✓ Bon cadeau entièrement utilisé
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Reste à payer aujourd'hui - MIS EN VALEUR */}
-                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-300 mt-2">
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <p className="text-xs text-blue-700 uppercase tracking-wide">
-                                    Reste à payer aujourd'hui
+                                {giftCard.remainingAmount > 0 && (
+                                  <div className="flex justify-between text-xs mt-1 pt-1 border-t border-green-200">
+                                    <span className="text-green-600">Reste sur le bon:</span>
+                                    <span className="font-semibold text-green-600">
+                                      {giftCard.remainingAmount.toFixed(2)}€
+                                    </span>
+                                  </div>
+                                )}
+                                {giftCard.remainingAmount === 0 && (
+                                  <p className="text-xs text-green-600 font-medium mt-1">
+                                    ✓ Bon cadeau entièrement utilisé
                                   </p>
-                                  <p className="text-2xl font-bold text-blue-600">
-                                    {calculateTotals().depositTotal.toFixed(2)}€
-                                  </p>
-                                </div>
+                                )}
                               </div>
-                            </div>
-                          </>
-                        )}
-
-                        {/* Si pas de bon cadeau, afficher le total à payer aujourd'hui - MIS EN VALEUR */}
-                        {!appliedGiftCard && (
-                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-300 mt-2">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <p className="text-xs text-blue-700 uppercase tracking-wide">
-                                  À payer aujourd'hui
-                                </p>
-                                <p className="text-2xl font-bold text-blue-600">
-                                  {calculateTotals().depositTotal.toFixed(2)}€
-                                </p>
-                              </div>
-                            </div>
+                            ))}
                           </div>
                         )}
+
+                        {/* Total à payer aujourd'hui - MIS EN VALEUR */}
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-300 mt-2">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="text-xs text-blue-700 uppercase tracking-wide">
+                                {appliedGiftCards.length > 0 ? "Reste à payer aujourd'hui" : "À payer aujourd'hui"}
+                              </p>
+                              <p className="text-2xl font-bold text-blue-600">
+                                {calculateTotals().depositTotal.toFixed(2)}€
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

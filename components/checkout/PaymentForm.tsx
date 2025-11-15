@@ -56,38 +56,13 @@ export function PaymentForm({
       if (error) {
         onError(error.message || 'Une erreur est survenue lors du paiement');
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Confirmer le paiement côté serveur
-        await confirmPaymentOnServer(paymentIntent.id, orderId);
+        // Le webhook Stripe s'occupe de la confirmation côté serveur
         onSuccess(paymentIntent);
       }
     } catch (err) {
       onError('Erreur lors du traitement du paiement');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const confirmPaymentOnServer = async (paymentIntentId: string, orderId: string) => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/api/checkout/confirm`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
-        },
-        body: JSON.stringify({
-          paymentIntentId,
-          orderId,
-        }),
-      });
-
-      const result = await response.json();
-      
-      if (!result.success) {
-        console.error('Erreur confirmation paiement:', result.message);
-      }
-    } catch (error) {
-      console.error('Erreur confirmation paiement:', error);
     }
   };
 
