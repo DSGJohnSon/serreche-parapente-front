@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Video, Check, X, Plus } from 'lucide-react';
+import { Video, Check, X, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { SessionManager } from '@/lib/sessionManager';
@@ -48,6 +48,7 @@ export function VideoToggle({ itemId, hasVideo, onUpdate, participantData }: Vid
             ? "L'option vidéo a été retirée (-25€)"
             : "L'option vidéo a été ajoutée (+25€)",
         });
+        // Appeler onUpdate pour rafraîchir silencieusement
         onUpdate();
       } else {
         toast({
@@ -90,7 +91,10 @@ export function VideoToggle({ itemId, hasVideo, onUpdate, participantData }: Vid
         }`}
       >
         {isSaving ? (
-          <span className="text-xs">Mise à jour...</span>
+          <>
+            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            <span className="text-xs">Mise à jour...</span>
+          </>
         ) : hasVideo ? (
           <>
             <Check className="w-4 h-4 mr-1" />

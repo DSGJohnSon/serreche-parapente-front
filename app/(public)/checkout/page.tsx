@@ -32,6 +32,7 @@ import {
   AlertTriangle,
   Info,
   Clock,
+  Loader2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -147,10 +148,24 @@ function ReservationTimer({ cartItems, compact = false }: { cartItems: CartItem[
   );
 }
 
+// Composant LoadingOverlay pour les mises à jour
+function LoadingOverlay({ message = "Mise à jour en cours..." }: { message?: string }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div className="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center gap-4 max-w-sm mx-4">
+        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+        <p className="text-lg font-semibold text-gray-800">{message}</p>
+        <p className="text-sm text-gray-600 text-center">Veuillez patienter...</p>
+      </div>
+    </div>
+  );
+}
+
 export default function CheckoutPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<
     Record<string, boolean>
@@ -180,9 +195,13 @@ export default function CheckoutPage() {
     loadCartItems();
   }, []);
 
-  const loadCartItems = async () => {
+  const loadCartItems = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      } else {
+        setIsUpdating(true);
+      }
       const sessionId = SessionManager.getOrCreateSessionId();
 
       const response = await fetch(
@@ -214,7 +233,11 @@ export default function CheckoutPage() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      } else {
+        setIsUpdating(false);
+      }
     }
   };
 
@@ -252,7 +275,7 @@ export default function CheckoutPage() {
           title: "Article supprimé",
           description: "L'article a été retiré de votre panier",
         });
-        loadCartItems(); // Recharger le panier
+        loadCartItems(true); // Recharger silencieusement
       } else {
         toast({
           title: "Erreur",
@@ -916,7 +939,7 @@ export default function CheckoutPage() {
                                       <VideoToggle
                                         itemId={item.id}
                                         hasVideo={false}
-                                        onUpdate={loadCartItems}
+                                        onUpdate={() => loadCartItems(true)}
                                         participantData={item.participantData}
                                       />
                                     </div>
@@ -933,7 +956,7 @@ export default function CheckoutPage() {
                                         participantData={item.participantData}
                                         type={item.type as "BAPTEME" | "STAGE"}
                                         itemId={item.id}
-                                        onUpdate={loadCartItems}
+                                        onUpdate={() => loadCartItems(true)}
                                       />
                                     </div>
                                   )}
@@ -945,7 +968,7 @@ export default function CheckoutPage() {
                                       <GiftCardDetails
                                         participantData={item.participantData}
                                         itemId={item.id}
-                                        onUpdate={loadCartItems}
+                                        onUpdate={() => loadCartItems(true)}
                                       />
                                     </div>
                                   )}
@@ -1541,6 +1564,9 @@ export default function CheckoutPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Overlay de chargement pour les mises à jour */}
+      {isUpdating && <LoadingOverlay message="Mise à jour de votre panier..." />}
     </div>
   );
 }

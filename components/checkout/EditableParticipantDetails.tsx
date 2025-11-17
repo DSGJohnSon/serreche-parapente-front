@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { User, Mail, Phone, Weight, Ruler, Calendar, Video, Edit2, Save, X } from 'lucide-react';
+import { User, Mail, Phone, Weight, Ruler, Calendar, Video, Edit2, Save, X, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -102,6 +102,7 @@ export function EditableParticipantDetails({
           description: "Les informations du participant ont été mises à jour",
         });
         setIsEditing(false);
+        // Appeler onUpdate pour rafraîchir silencieusement
         onUpdate();
       } else {
         toast({
@@ -156,10 +157,11 @@ export function EditableParticipantDetails({
       if (result.success) {
         toast({
           title: participantData.hasVideo ? "Option vidéo retirée" : "Option vidéo ajoutée",
-          description: participantData.hasVideo 
-            ? "L'option vidéo a été retirée de votre panier" 
+          description: participantData.hasVideo
+            ? "L'option vidéo a été retirée de votre panier"
             : "L'option vidéo a été ajoutée à votre panier",
         });
+        // Appeler onUpdate pour rafraîchir silencieusement
         onUpdate();
       } else {
         toast({
@@ -205,9 +207,19 @@ export function EditableParticipantDetails({
                   type="submit"
                   size="sm"
                   disabled={isSaving}
+                  className="min-w-[140px]"
                 >
-                  <Save className="w-4 h-4 mr-1" />
-                  {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-1" />
+                      Enregistrer
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -415,10 +427,13 @@ export function EditableParticipantDetails({
                   size="sm"
                   onClick={toggleVideo}
                   disabled={isSaving}
-                  className="border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400"
+                  className="border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400 min-w-[100px]"
                 >
                   {isSaving ? (
-                    <span className="text-xs">Mise à jour...</span>
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      <span className="text-xs">Mise à jour...</span>
+                    </>
                   ) : (
                     <>
                       <X className="w-4 h-4 mr-1" />
