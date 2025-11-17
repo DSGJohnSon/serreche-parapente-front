@@ -67,7 +67,7 @@ const STAGE_CATEGORIES: StageCategory[] = [
     name: "Stage Initiation",
     price: 450,
     description:
-      "Découvrez le parapente et apprenez les bases du pilotage. 5 jours de formation.",
+      "Le stage d'initiation au parapente de 5 jours est destiné aux débutants, vous permettant de découvrir les sensations du vol libre et de réaliser votre premier vol solo en toute sécurité, encadré par des moniteurs expérimentés, dans les montagnes du Briançonnais et du parc des Écrins.",
     duration: 5,
   },
   {
@@ -75,7 +75,7 @@ const STAGE_CATEGORIES: StageCategory[] = [
     name: "Stage Progression",
     price: 550,
     description:
-      "Perfectionnez votre technique et gagnez en autonomie. 5 jours de formation.",
+      "Le stage progression de 5 jours est destiné aux pilotes de parapente débutants souhaitant perfectionner leurs techniques de décollage, d'atterrissage et de vol, avec pour objectif de voler en solo en toute confiance et liberté, dans les cieux alpins.",
     duration: 5,
   },
   {
@@ -83,7 +83,7 @@ const STAGE_CATEGORIES: StageCategory[] = [
     name: "Stage Autonomie",
     price: 650,
     description:
-      "Devenez pilote autonome et préparez votre brevet. 5 jours de formation intensive.",
+      "Le stage autonomie de 10 jours combine initiation et progression pour vous permettre de devenir un pilote de parapente autonome, prêt à explorer les sommets en toute liberté, dans le cadre spectaculaire des Hautes-Alpes.",
     duration: 5,
   },
 ];
