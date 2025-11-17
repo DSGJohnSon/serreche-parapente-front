@@ -33,7 +33,11 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    STAGE: true,
+    BAPTEME: true,
+    GIFT_CARD: true,
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -321,7 +325,7 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
 
                   const sectionInfo = getSectionInfo(type);
                   const IconComponent = sectionInfo.icon;
-                  const isCollapsed = collapsedSections[type];
+                  const isCollapsed = collapsedSections[type] ?? true;
 
                   return (
                     <div key={type} className="space-y-3">
@@ -443,19 +447,9 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Button
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
-                  size="lg"
-                  onClick={() => {
-                    setIsOpen(false);
-                  }}
-                >
-                  Je continue mes achats
-                </Button>
                 <Button
                   variant="outline"
-                  className="w-full border-slate-300 text-slate-700 hover:bg-slate-50"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg text-white hover:text-white"
                   size="lg"
                   onClick={() => {
                     setIsOpen(false);
@@ -465,7 +459,6 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   Voir mon panier en détail
                 </Button>
-              </div>
             </div>
           )}
         </div>

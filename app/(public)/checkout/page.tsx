@@ -842,7 +842,7 @@ export default function CheckoutPage() {
                                             €
                                           </p>
                                           {item.participantData.hasVideo && (
-                                            <p className="text-xs text-green-600">
+                                            <p className="text-xs text-gray-500">
                                               + Vidéo: 25€
                                             </p>
                                           )}
@@ -906,23 +906,22 @@ export default function CheckoutPage() {
                                       </div>
                                     </div>
                                   </div>
-
-                                  {/* Option vidéo pour les baptêmes - Toujours visible */}
-                                  {item.type === "BAPTEME" && (
+  
+                                  {/* Option vidéo pour les baptêmes - Toujours visible si pas activée */}
+                                  {item.type === "BAPTEME" && !item.participantData.hasVideo && (
                                     <div
                                       className="mt-3 pt-3 border-t border-gray-200"
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <VideoToggle
                                         itemId={item.id}
-                                        hasVideo={
-                                          item.participantData.hasVideo || false
-                                        }
+                                        hasVideo={false}
                                         onUpdate={loadCartItems}
                                         participantData={item.participantData}
                                       />
                                     </div>
                                   )}
+
                                 </div>
 
                                 {/* Détails du participant pour baptêmes et stages - Affichés sur demande */}

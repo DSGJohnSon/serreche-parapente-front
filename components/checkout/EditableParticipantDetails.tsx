@@ -396,6 +396,40 @@ export function EditableParticipantDetails({
             </div>
           )}
         </div>
+
+        {/* Option vidéo pour les baptêmes - Affichée uniquement si activée */}
+        {type === 'BAPTEME' && participantData.hasVideo && (
+          <div className="pt-3 border-t border-slate-300">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Video className="w-4 h-4 text-green-600" />
+                  <div>
+                    <p className="text-sm font-medium text-green-800">Option vidéo souvenir</p>
+                    <p className="text-xs text-green-700">Immortalisez votre vol (+25€)</p>
+                  </div>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleVideo}
+                  disabled={isSaving}
+                  className="border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400"
+                >
+                  {isSaving ? (
+                    <span className="text-xs">Mise à jour...</span>
+                  ) : (
+                    <>
+                      <X className="w-4 h-4 mr-1" />
+                      <span className="text-xs font-semibold">Retirer</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

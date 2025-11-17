@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Video, Check, X } from 'lucide-react';
+import { Video, Check, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { SessionManager } from '@/lib/sessionManager';
@@ -86,7 +86,7 @@ export function VideoToggle({ itemId, hasVideo, onUpdate, participantData }: Vid
         className={`min-w-[120px] ${
           hasVideo 
             ? 'bg-green-600 hover:bg-green-700 text-white' 
-            : 'border-2 border-green-600 text-green-700 hover:bg-green-50'
+            : 'border bg-transparent border-gray-400 text-gray-700 hover:bg-gray-50'
         }`}
       >
         {isSaving ? (
@@ -98,7 +98,7 @@ export function VideoToggle({ itemId, hasVideo, onUpdate, participantData }: Vid
           </>
         ) : (
           <>
-            <X className="w-4 h-4 mr-1" />
+            <Plus className="w-4 h-4 mr-1" />
             <span className="text-xs font-semibold">Ajouter</span>
           </>
         )}
