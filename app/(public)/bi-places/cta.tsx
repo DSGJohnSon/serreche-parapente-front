@@ -33,12 +33,12 @@ function CTABiPlaces() {
         )}
       >
         <Link
-          href="/"
+          href="/reserver/bapteme"
           title="Réserver mon Baptême de l'Air"
         >
           <LucideArrowRight className="size-4 mr-2" />
-          "Réserver mon Baptême de l'Air"
-          <LucideArrowRight className="size-4 mr-2" />
+          Réserver mon Baptême de l'Air
+          <LucideArrowRight className="size-4 ml-2" />
         </Link>
       </Button>
       <Button
@@ -50,12 +50,12 @@ function CTABiPlaces() {
         )}
       >
         <Link
-          href="/"
+          href="/reserver/bapteme"
           title="Réserver mon Baptême de l'Air"
         >
           <LucideArrowRight className="size-4 mr-2" />
-          "Réserver mon Baptême de l'Air"
-          <LucideArrowRight className="size-4 mr-2" />
+          Réserver mon Baptême de l'Air
+          <LucideArrowRight className="size-4 ml-2" />
         </Link>
       </Button>
     </div>

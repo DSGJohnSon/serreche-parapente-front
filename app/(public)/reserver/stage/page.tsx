@@ -691,8 +691,7 @@ function StageReservationPageContent() {
                             key={yearData.year}
                             value={yearData.year.toString()}
                           >
-                            {yearData.year} - {yearData.count} créneau
-                            {yearData.count > 1 ? "x" : ""}
+                            {yearData.year}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -726,15 +725,30 @@ function StageReservationPageContent() {
                     <SelectValue placeholder="Sélectionner un mois" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableMonths.map((monthData) => (
-                      <SelectItem
-                        key={monthData.month}
-                        value={monthData.month.toString()}
-                      >
-                        {getMonthLabel(monthData.month)} - {monthData.count}{" "}
-                        créneau{monthData.count > 1 ? "x" : ""}
-                      </SelectItem>
-                    ))}
+                    {MONTHS.map((month) => {
+                      const monthData = availableMonths.find(m => m.month === month.value);
+                      const count = monthData?.count || 0;
+                      return (
+                        <SelectItem
+                          key={month.value}
+                          value={month.value.toString()}
+                          disabled={count === 0}
+                        >
+                          <div className="flex items-center justify-between w-full gap-2">
+                            <span>{month.label}</span>
+                            <Badge
+                              variant={count > 0 ? "default" : "secondary"}
+                              className={cn(
+                                "ml-2",
+                                count > 0 ? "bg-blue-600" : "bg-gray-400"
+                              )}
+                            >
+                              {count} créneau{count > 1 ? "x" : ""} disponible{count > 1 ? "s" : ""}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -1254,25 +1268,25 @@ function StageReservationPageContent() {
             <Button
               onClick={() => {
                 setShowSuccessDialog(false);
-                router.push("/checkout");
+                router.push("/reserver");
               }}
               className="w-full gap-2"
               size="lg"
             >
-              <ShoppingCart className="w-4 h-4" />
-              Voir mon panier
+              <Plus className="w-4 h-4" />
+              Je continue mes achats
             </Button>
             <Button
               onClick={() => {
                 setShowSuccessDialog(false);
-                router.push("/reserver");
+                router.push("/checkout");
               }}
               variant="outline"
               className="w-full gap-2"
               size="lg"
             >
-              <Plus className="w-4 h-4" />
-              Continuer mes achats
+              <ShoppingCart className="w-4 h-4" />
+              Voir mon panier
             </Button>
           </DialogFooter>
         </DialogContent>

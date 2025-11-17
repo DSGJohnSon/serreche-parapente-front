@@ -449,6 +449,16 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
                   size="lg"
                   onClick={() => {
                     setIsOpen(false);
+                  }}
+                >
+                  Je continue mes achats
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full border-slate-300 text-slate-700 hover:bg-slate-50"
+                  size="lg"
+                  onClick={() => {
+                    setIsOpen(false);
                     window.location.href = "/checkout";
                   }}
                 >

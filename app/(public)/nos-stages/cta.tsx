@@ -38,7 +38,11 @@ function CTANosStages({
       >
         <Link
           href={
-            type === "INITIATION" ? "/" : type === "PROGRESSION" ? "/" : "/"
+            type === "INITIATION"
+              ? "/reserver/stage?stageType=INITIATION"
+              : type === "PROGRESSION"
+                ? "/reserver/stage?stageType=PROGRESSION"
+                : "/reserver/stage?stageType=AUTONOMIE"
           }
           title={
             type === "INITIATION"
@@ -60,13 +64,17 @@ function CTANosStages({
         asChild
         variant="outline"
         className={cn(
-          "fixed hidden lg:flex top-16 right-20 z-50 transition-all duration-300",
-          isScrolled ? "top-4 right-16" : "top-[3.25rem] right-20"
+          "fixed hidden lg:flex z-50 transition-all duration-300",
+          isScrolled ? "top-4 right-32" : "top-16 right-[8.5rem]"
         )}
       >
         <Link
           href={
-            type === "INITIATION" ? "/" : type === "PROGRESSION" ? "/" : "/"
+            type === "INITIATION"
+              ? "/reserver/stage?stageType=INITIATION"
+              : type === "PROGRESSION"
+                ? "/reserver/stage?stageType=PROGRESSION"
+                : "/reserver/stage?stageType=AUTONOMIE"
           }
           title={
             type === "INITIATION"

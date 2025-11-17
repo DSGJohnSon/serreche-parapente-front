@@ -32,7 +32,7 @@ export default function PricingSection() {
               700,00€ <span className="text-sm font-normal">TTC</span>
             </p>
             <p className="text-sm mb-2">soit 140,00€ / jour</p>
-            <Link href="/" title="Réserver votre place" className="w-full">
+            <Link href="/reserver/stage?stageType=INITIATION" title="Réserver votre place" className="w-full">
               <Button
                 variant={"default"}
                 size={"lg"}
@@ -64,7 +64,7 @@ export default function PricingSection() {
               700,00€ <span className="text-sm font-normal">TTC</span>
             </p>
             <p className="text-sm mb-2">soit 140,00€ / jour</p>
-            <Link href="/" title="Réserver votre place" className="w-full">
+            <Link href="/reserver/stage?stageType=PROGRESSION" title="Réserver votre place" className="w-full">
               <Button
                 variant={"default"}
                 size={"lg"}
@@ -100,7 +100,7 @@ export default function PricingSection() {
               1 200,00€ <span className="text-sm font-normal">TTC</span>
             </p>
             <p className="text-sm mb-2">soit 120,00€ / jour</p>
-            <Link href="/" title="Réserver votre place" className="w-full">
+            <Link href="/reserver/stage?stageType=AUTONOMIE" title="Réserver votre place" className="w-full">
               <Button
                 variant={"default"}
                 size={"lg"}

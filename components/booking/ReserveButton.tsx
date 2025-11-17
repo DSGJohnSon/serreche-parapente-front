@@ -49,18 +49,21 @@ export function ReserveButton({ type, stageType, baptemeCategory, className }: R
   };
 
   const handleReservation = () => {
-    const params = new URLSearchParams();
-    params.set('type', type);
-    
-    if (stageType) {
-      params.set('stageType', stageType);
+    if (type === 'bapteme') {
+      const params = new URLSearchParams();
+      if (baptemeCategory) {
+        params.set('category', baptemeCategory);
+      }
+      router.push(`/reserver/bapteme?${params.toString()}`);
+    } else if (type === 'stage') {
+      const params = new URLSearchParams();
+      if (stageType) {
+        params.set('stageType', stageType);
+      }
+      router.push(`/reserver/stage?${params.toString()}`);
+    } else {
+      router.push('/reserver');
     }
-    
-    if (baptemeCategory) {
-      params.set('category', baptemeCategory);
-    }
-    
-    router.push(`/reserver?${params.toString()}`);
   };
 
   return (

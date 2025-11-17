@@ -75,14 +75,9 @@ export default function NosStagesPage() {
         </div>
         <div className="mt-8 lg:w-1/2 lg:mt-0">
           <div className="flex flex-col items-start">
-            <Link
-              href="/nos-stages/initiation"
-              className="inline-block hover:underline"
-            >
               <h2 className="font-bold text-2xl text-slate-800">
                 Vivez un vol en parapente dans un cadre exceptionnel
               </h2>
-            </Link>
           </div>
           <p className="text-slate-800 mt-4">
             Offrez-vous une parenthèse hors du temps avec un baptême de
@@ -129,7 +124,7 @@ export default function NosStagesPage() {
       </h2>
       <section className="mx-4 my-24 lg:mx-36 xl:mx-48 lg:my-48 lg:flex lg:flex-row-reverse lg:gap-12 lg:items-center">
         <Link
-          href="/"
+          href="/reserver/bapteme?category=AVENTURE"
           className="inline-block lg:w-1/2 h-[40vh] xl:h-[50vh] rounded-lg overflow-hidden"
         >
           <Image
@@ -142,7 +137,7 @@ export default function NosStagesPage() {
         </Link>
         <div className="mt-8 lg:w-1/2 lg:mt-0">
           <div className="flex flex-col items-start">
-            <Link href="/" className="inline-block hover:underline">
+            <Link href="/reserver/bapteme?category=AVENTURE" className="inline-block hover:underline">
               <h3 className="font-bold text-2xl text-slate-800">
                 Baptême Parapente "Aventure"
               </h3>
@@ -192,7 +187,7 @@ export default function NosStagesPage() {
       </section>
       <section className="mx-4 my-24 lg:mx-36 xl:mx-48 lg:my-48 lg:flex lg:gap-12 lg:items-center">
         <Link
-          href="/"
+          href="/reserver/bapteme?category=DUREE"
           className="inline-block lg:w-1/2 h-[40vh] xl:h-[50vh] rounded-lg overflow-hidden"
         >
           <Image
@@ -205,7 +200,7 @@ export default function NosStagesPage() {
         </Link>
         <div className="mt-8 lg:w-1/2 lg:mt-0">
           <div className="flex flex-col items-start">
-            <Link href="/" className="inline-block hover:underline">
+            <Link href="/reserver/bapteme?category=DUREE" className="inline-block hover:underline">
               <h3 className="font-bold text-2xl text-slate-800">
                 Baptême Parapente "Durée"
               </h3>
@@ -254,7 +249,7 @@ export default function NosStagesPage() {
       </section>
       <section className="mx-4 my-24 lg:mx-36 xl:mx-48 lg:my-48 lg:flex lg:flex-row-reverse lg:gap-12 lg:items-center">
         <Link
-          href="/"
+          href="/reserver/bapteme?category=LONGUE_DUREE"
           className="inline-block lg:w-1/2 h-[40vh] xl:h-[50vh] rounded-lg overflow-hidden"
         >
           <Image
@@ -267,7 +262,7 @@ export default function NosStagesPage() {
         </Link>
         <div className="mt-8 lg:w-1/2 lg:mt-0">
           <div className="flex flex-col items-start">
-            <Link href="/" className="inline-block hover:underline">
+            <Link href="/reserver/bapteme?category=LONGUE_DUREE" className="inline-block hover:underline">
               <h3 className="font-bold text-2xl text-slate-800">
                 Baptême Parapente "Longue Durée"
               </h3>
@@ -314,7 +309,7 @@ export default function NosStagesPage() {
       </section>
       <section className="mx-4 my-24 lg:mx-36 xl:mx-48 lg:my-48 lg:flex lg:gap-12 lg:items-center">
         <Link
-          href="/"
+          href="/reserver/bapteme?category=ENFANT"
           className="inline-block lg:w-1/2 h-[40vh] xl:h-[50vh] rounded-lg overflow-hidden"
         >
           <Image
@@ -327,7 +322,7 @@ export default function NosStagesPage() {
         </Link>
         <div className="mt-8 lg:w-1/2 lg:mt-0">
           <div className="flex flex-col items-start">
-            <Link href="/" className="inline-block hover:underline">
+            <Link href="/reserver/bapteme?category=ENFANT" className="inline-block hover:underline">
               <h3 className="font-bold text-2xl text-slate-800">
                 Baptême Parapente "Enfant"
               </h3>
@@ -373,7 +368,7 @@ export default function NosStagesPage() {
       </section>
       <section className="mx-4 my-24 lg:mx-36 xl:mx-48 lg:my-48 lg:flex lg:flex-row-reverse lg:gap-12 lg:items-center">
         <Link
-          href="/"
+          href="/reserver/bapteme?category=HIVER"
           className="inline-block lg:w-1/2 h-[40vh] xl:h-[50vh] rounded-lg overflow-hidden"
         >
           <Image
@@ -386,7 +381,7 @@ export default function NosStagesPage() {
         </Link>
         <div className="mt-8 lg:w-1/2 lg:mt-0">
           <div className="flex flex-col items-start">
-            <Link href="/" className="inline-block hover:underline">
+            <Link href="/reserver/bapteme?category=HIVER" className="inline-block hover:underline">
               <h3 className="font-bold text-2xl text-slate-800">
                 Baptême Parapente "Hiver"
               </h3>

@@ -509,25 +509,25 @@ export default function BonCadeauReservationPage() {
             <Button
               onClick={() => {
                 setShowSuccessDialog(false);
-                router.push('/checkout');
+                router.push('/reserver');
               }}
               className="w-full gap-2"
               size="lg"
             >
-              <ShoppingCart className="w-4 h-4" />
-              Voir mon panier
+              <Plus className="w-4 h-4" />
+              Je continue mes achats
             </Button>
             <Button
               onClick={() => {
                 setShowSuccessDialog(false);
-                router.push('/reserver');
+                router.push('/checkout');
               }}
               variant="outline"
               className="w-full gap-2"
               size="lg"
             >
-              <Plus className="w-4 h-4" />
-              Continuer mes achats
+              <ShoppingCart className="w-4 h-4" />
+              Voir mon panier
             </Button>
           </DialogFooter>
         </DialogContent>
