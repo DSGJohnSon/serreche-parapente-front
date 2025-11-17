@@ -273,25 +273,28 @@ function PaymentPageContent() {
             {order.remainingAmount > 0 && remainingPayments.length > 0 && (
               <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
                 <h4 className="font-semibold text-sm text-orange-900 mb-2">
-                  Paiements à venir :
+                  Règlements futurs
                 </h4>
-                <p className="text-sm text-orange-800">
+                <p className="text-sm text-orange-800 mb-1">
                   Solde total à venir : <strong>{order.remainingAmount.toFixed(2)}€</strong>
                 </p>
                 <p className='text-xs text-orange-700 mb-3'>Les soldes de stages seront à régler sur place le jour du stage.</p>
                 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {remainingPayments.map((payment, index) => (
-                    <div key={index} className="text-sm">
-                      <div className="flex justify-between">
+                    <div key={index} className="text-sm border-l-2 border-orange-300 pl-3">
+                      <p className="font-medium text-orange-900 mb-1">
+                        {payment.participantName}
+                      </p>
+                      <div className="flex justify-between items-start">
                         <span className="text-orange-700">
-                          Solde du stage {payment.stageType} pour {payment.participantName}
+                          Solde Stage {payment.stageType}
                         </span>
-                        <span className="font-medium text-orange-900">
+                        <span className="font-semibold text-orange-900">
                           {payment.remainingAmount.toFixed(2)}€
                         </span>
                       </div>
-                      <p className="text-xs text-orange-600">
+                      <p className="text-xs text-orange-600 mt-1">
                         À régler <span className='font-semibold underline'>sur place</span> le {new Date(payment.stageStartDate).toLocaleDateString('fr-FR', {
                           day: 'numeric',
                           month: 'long',

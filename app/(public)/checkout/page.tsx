@@ -335,6 +335,7 @@ export default function CheckoutPage() {
       amount: number;
       date: string;
       description: string;
+      participantName: string;
     }[] = [];
 
     cartItems.forEach((item) => {
@@ -345,10 +346,12 @@ export default function CheckoutPage() {
         remainingTotal += remaining;
 
         if (remaining > 0) {
+          const participantName = `${item.participantData?.firstName || ''} ${item.participantData?.lastName || ''}`.trim();
           futurePayments.push({
             amount: remaining,
             date: item.stage?.startDate,
             description: `Solde Stage ${item.stage?.type}`,
+            participantName: participantName,
           });
         }
       } else {
@@ -1009,6 +1012,10 @@ export default function CheckoutPage() {
                               >
                                 <span className="text-slate-600">
                                   {payment.description}
+                                  {payment.participantName && (
+                                    <span className="font-medium block mb-0.5">pour {payment.participantName}</span>
+                                  )}
+
                                   <span className="block text-slate-500 mt-0.5">
                                     À régler sur place le <span className="underline">{formatDate(payment.date)}</span>
                                   </span>
@@ -1252,6 +1259,9 @@ export default function CheckoutPage() {
                                 className="flex justify-between text-xs"
                               >
                                 <span className="text-slate-600">
+                                  {payment.participantName && (
+                                    <span className="font-medium block mb-0.5">{payment.participantName}</span>
+                                  )}
                                   {payment.description}
                                   <span className="block text-slate-500 mt-0.5">
                                     À régler sur place le {formatDate(payment.date)}
