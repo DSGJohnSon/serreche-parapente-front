@@ -69,7 +69,9 @@ export function CartItemCard({ item, onRemove }: CartItemCardProps) {
   const getItemTitle = () => {
     switch (item.type) {
       case "STAGE":
-        return `Stage ${item.stage?.type} - ${formatDate(item.stage?.startDate)}`;
+        // Utiliser selectedStageType du participantData si disponible, sinon fallback sur stage.type
+        const stageType = item.participantData?.selectedStageType || item.stage?.type;
+        return `Stage ${stageType} - ${formatDate(item.stage?.startDate)}`;
       case "BAPTEME":
         return `Baptême ${item.participantData.selectedCategory} - ${formatDate(item.bapteme?.date)}`;
       case "GIFT_CARD":

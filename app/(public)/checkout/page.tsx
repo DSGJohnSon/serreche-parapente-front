@@ -296,7 +296,9 @@ export default function CheckoutPage() {
   const getItemTitle = (item: CartItem) => {
     switch (item.type) {
       case "STAGE":
-        return `Stage ${item.stage?.type} - ${new Date(item.stage?.startDate).toLocaleDateString("fr-FR")}`;
+        // Utiliser selectedStageType du participantData si disponible, sinon fallback sur stage.type
+        const stageType = item.participantData?.selectedStageType || item.stage?.type;
+        return `Stage ${stageType} - ${new Date(item.stage?.startDate).toLocaleDateString("fr-FR")}`;
       case "BAPTEME":
         return `Baptême ${item.participantData.selectedCategory} - ${new Date(item.bapteme?.date).toLocaleDateString("fr-FR")}`;
       case "GIFT_CARD":
@@ -1002,57 +1004,89 @@ export default function CheckoutPage() {
 
                   {/* Détail des paiements */}
                   <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3">
-                    <h3 className="font-semibold text-sm text-slate-800 mb-3">
+                    <h3 className="font-semibold text-sm text-slate-800 mb-3 border-l-4 border-blue-500 pl-3">
                       Détail des paiements
                     </h3>
 
                     {/* À payer aujourd'hui */}
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm font-semibold">
-                        <span className="text-slate-700">
-                          À payer aujourd'hui
-                        </span>
-                        <span className="text-slate-800">
-                          {(calculateTotals().originalDepositTotal || calculateTotals().depositTotal).toFixed(2)}€
-                        </span>
+                      <p className="text-sm font-semibold text-slate-700">
+                        À payer aujourd'hui
+                      </p>
+                      <div className="pl-3 space-y-2">
+                        {cartItems.map((item) => {
+                          const itemPrice = item.type === "STAGE"
+                            ? getStageDeposit(item.stage)
+                            : getItemPrice(item);
+                          const participantName = `${item.participantData?.firstName || ''} ${item.participantData?.lastName || ''}`.trim();
+                          
+                          return (
+                            <div
+                              key={item.id}
+                              className="flex justify-between text-xs"
+                            >
+                              <span className="text-slate-600">
+                                {participantName && (
+                                  <span className="font-medium block mb-0.5">{participantName}</span>
+                                )}
+                                {item.type === "STAGE" && `Acompte Stage ${item.participantData?.selectedStageType || item.stage?.type} du ${formatDate(item.stage?.startDate)}`}
+                                {item.type === "BAPTEME" && `Baptême ${item.participantData.selectedCategory} du ${formatDate(item.bapteme?.date)}`}
+                                {item.type === "GIFT_CARD" && `Bon cadeau ${item.giftCardAmount}€`}
+                                {item.type === "BAPTEME" && item.participantData.hasVideo && (
+                                  <span className="block text-slate-500 mt-0.5">+ Option vidéo (25€)</span>
+                                )}
+                              </span>
+                              <span className="font-medium text-slate-700">
+                                {itemPrice.toFixed(2)}€
+                              </span>
+                            </div>
+                          );
+                        })}
+                        <div className="flex justify-between text-sm font-semibold pt-2 border-t border-slate-300">
+                          <span className="text-slate-700">Total à payer aujourd'hui</span>
+                          <span className="text-slate-800">
+                            {(calculateTotals().originalDepositTotal || calculateTotals().depositTotal).toFixed(2)}€
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Paiements futurs */}
+                    {/* Paiements à venir */}
                     {calculateTotals().remainingTotal > 0 && (
                       <>
                         <Separator className="my-3" />
                         <div className="space-y-2">
                           <p className="text-sm font-semibold text-slate-700">
-                            Règlements futurs
+                            Règlements à venir
                           </p>
-                          {calculateTotals().futurePayments.map(
-                            (payment, index) => (
-                              <div
-                                key={index}
-                                className="flex justify-between text-xs pl-3"
-                              >
-                                <span className="text-slate-600">
-                                  {payment.description}
-                                  {payment.participantName && (
-                                    <span className="font-medium block mb-0.5">pour {payment.participantName}</span>
-                                  )}
-
-                                  <span className="block text-slate-500 mt-0.5">
-                                    À régler sur place le <span className="underline">{formatDate(payment.date)}</span>
+                          <div className="pl-3 space-y-2">
+                            {calculateTotals().futurePayments.map(
+                              (payment, index) => (
+                                <div
+                                  key={index}
+                                  className="flex justify-between text-xs"
+                                >
+                                  <span className="text-slate-600">
+                                    {payment.participantName && (
+                                      <span className="font-medium block mb-0.5">{payment.participantName}</span>
+                                    )}
+                                    {payment.description}
+                                    <span className="block text-slate-500 mt-0.5">
+                                      À régler sur place le <span className="underline">{formatDate(payment.date)}</span>
+                                    </span>
                                   </span>
-                                </span>
-                                <span className="font-medium text-slate-700">
-                                  {payment.amount.toFixed(2)}€
-                                </span>
-                              </div>
-                            )
-                          )}
-                          <div className="flex justify-between text-sm font-semibold pt-2 border-t border-slate-300">
-                            <span className="text-slate-700">Total des paiements à venir</span>
-                            <span className="text-slate-800">
-                              {calculateTotals().remainingTotal.toFixed(2)}€
-                            </span>
+                                  <span className="font-medium text-slate-700">
+                                    {payment.amount.toFixed(2)}€
+                                  </span>
+                                </div>
+                              )
+                            )}
+                            <div className="flex justify-between text-sm font-semibold pt-2 border-t border-slate-300">
+                              <span className="text-slate-700">Total des paiements à venir</span>
+                              <span className="text-slate-800">
+                                {calculateTotals().remainingTotal.toFixed(2)}€
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </>
@@ -1150,7 +1184,7 @@ export default function CheckoutPage() {
 
                 {/* Détail des paiements */}
                 <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3">
-                  <h3 className="font-semibold text-sm text-slate-800 mb-3">
+                  <h3 className="font-semibold text-sm text-slate-800 mb-3 border-l-4 border-blue-500 pl-3">
                     Détail des paiements
                   </h3>
 
@@ -1265,13 +1299,13 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Paiements futurs */}
+                  {/* Paiements à venir */}
                   {calculateTotals().remainingTotal > 0 && (
                     <>
                       <Separator className="my-3" />
                       <div className="space-y-2">
                         <p className="text-sm font-semibold text-slate-700">
-                          Règlements futurs
+                          Règlements à venir
                         </p>
                         <div className="pl-3 space-y-2">
                           {calculateTotals().futurePayments.map(
