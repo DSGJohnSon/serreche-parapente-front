@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import MultiSelect from "@/components/inputs/MultiSelect";
 import { SearchIcon } from "lucide-react";
-import { getCategories, getAuthors } from "@/sanity/lib/blogs"; // Import de tes fonctions fetch
 
 interface BlogFiltersProps {
   searchValue: string;
@@ -39,8 +38,17 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({
   useEffect(() => {
     const fetchCategoriesAndAuthors = async () => {
       try {
-        const fetchedCategories = await getCategories();
-        const fetchedAuthors = await getAuthors();
+        const [categoriesResponse, authorsResponse] = await Promise.all([
+          fetch('/api/blog?action=categories'),
+          fetch('/api/blog?action=authors')
+        ]);
+
+        if (!categoriesResponse.ok || !authorsResponse.ok) {
+          throw new Error('Failed to fetch filters data');
+        }
+
+        const fetchedCategories = await categoriesResponse.json();
+        const fetchedAuthors = await authorsResponse.json();
 
         setCategories(fetchedCategories); // Met à jour les catégories
         setAuthors(fetchedAuthors); // Récupère juste les noms des auteurs

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getBlogs, getLastBlog } from "@/sanity/lib/blogs";
 import BlogFilters from "@/components/blog/blog-filters"; // Import du composant
 import BlogCard from "@/components/blog/blog-card";
 import { Button } from "@/components/ui/button";
@@ -60,13 +59,18 @@ function BlogContent() {
     const page = Number(searchParams.get("page")) || 1;
 
     try {
-      const fetchedPosts = await getBlogs({
+      const params = new URLSearchParams({
         search: query,
-        categories,
-        authors,
-        page,
-        limit: postsPerPage,
+        categories: categories.join(","),
+        authors: authors.join(","),
+        page: String(page),
+        limit: String(postsPerPage),
       });
+
+      const response = await fetch(`/api/blog?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch blogs');
+      
+      const fetchedPosts = await response.json();
 
       setPosts(fetchedPosts);
       setCurrentPage(page);
@@ -132,7 +136,10 @@ function BlogContent() {
   // Fetch et Appel du post le plus récent
   const fetchLastPost = async () => {
     try {
-      const fetchedLastPost = await getLastBlog();
+      const response = await fetch('/api/blog?action=last');
+      if (!response.ok) throw new Error('Failed to fetch last blog');
+      
+      const fetchedLastPost = await response.json();
 
       setLastPost(fetchedLastPost);
     } catch (err) {
