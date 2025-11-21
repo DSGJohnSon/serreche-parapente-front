@@ -1,13 +1,7 @@
-"use client";
-
 import { getBlogs } from "@/sanity/lib/blogs";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import BlogCard from "./blog-card";
 
-interface Posts {
-  items: Post[];
-  total: number;
-}
 interface Post {
   title: string;
   slug: {
@@ -26,41 +20,24 @@ interface Post {
   }[];
 }
 
-function BlogRelativeArticles({ slugToExclude }: { slugToExclude?: string }) {
-  const [posts, setPosts] = useState<Posts>({ items: [], total: 0 });
-  const [loading, setLoading] = useState(false);
+async function BlogRelativeArticles({ slugToExclude }: { slugToExclude?: string }) {
+  const fetchedPosts = await getBlogs({
+    limit: 4,
+  });
 
-  const fetchPosts = async () => {
-    setLoading(true);
+  let posts = fetchedPosts.items || [];
 
-    try {
-      const fetchedPosts = await getBlogs({
-        limit: 4,
-      });
-
-      if (slugToExclude) {
-        fetchedPosts.items = fetchedPosts.items.filter(
-          (post: any) => post.slug.current !== slugToExclude
-        );
-      } else {
-        fetchedPosts.items = fetchedPosts.items.slice(0, 3);
-      }
-
-      setPosts(fetchedPosts);
-    } catch (err) {
-      console.error("Erreur lors du chargement des articles :", err);
-    }
-
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  if (slugToExclude) {
+    posts = posts.filter(
+      (post: Post) => post.slug.current !== slugToExclude
+    );
+  } else {
+    posts = posts.slice(0, 3);
+  }
 
   return (
     <div className="space-y-4 md:space-y-0 md:flex items-stretch gap-8">
-      {posts.items.map((post) => (
+      {posts.map((post: Post) => (
         <BlogCard
           key={post.slug.current}
           title={post.title}
