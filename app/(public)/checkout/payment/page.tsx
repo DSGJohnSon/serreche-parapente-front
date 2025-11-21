@@ -58,21 +58,45 @@ function PaymentPageContent() {
             if (remaining > 0) {
               remainingAmount += remaining;
               remainingPaymentsList.push({
-                stageId: item.stage.id,
-                stageType: item.stage.type,
-                stageStartDate: item.stage.startDate,
+                type: 'STAGE',
+                itemId: item.stage.id,
+                itemType: item.stage.type,
+                itemDate: item.stage.startDate,
                 remainingAmount: remaining,
                 dueDate: item.stage.startDate,
                 participantName: `${item.participantData?.firstName || ''} ${item.participantData?.lastName || ''}`.trim()
               });
             }
+          } else if (item.type === 'BAPTEME' && item.bapteme) {
+            // Pour les baptêmes : acompte + vidéo (si sélectionnée)
+            const baptemeDeposit = item.bapteme.acomptePrice || 35;
+            const videoPrice = item.participantData?.hasVideo ? 25 : 0;
+            depositAmount += baptemeDeposit + videoPrice;
+            
+            // Calculer le reste à payer (prix de base - acompte, vidéo déjà payée)
+            const basePrice = item.totalPrice - videoPrice; // Prix du baptême sans vidéo
+            const remaining = basePrice - baptemeDeposit;
+            if (remaining > 0) {
+              remainingAmount += remaining;
+              const category = item.participantData?.selectedCategory || '';
+              remainingPaymentsList.push({
+                type: 'BAPTEME',
+                itemId: item.bapteme.id,
+                itemType: category,
+                itemDate: item.bapteme.date,
+                remainingAmount: remaining,
+                dueDate: item.bapteme.date,
+                participantName: `${item.participantData?.firstName || ''} ${item.participantData?.lastName || ''}`.trim(),
+                hasVideo: false // Vidéo déjà payée
+              });
+            }
           } else {
-            // Pour les baptêmes et bons cadeaux : paiement complet
+            // Pour les cartes cadeaux : paiement complet
             depositAmount += item.totalPrice;
           }
         });
         
-        // Appliquer la réduction des bons cadeaux sur le depositAmount
+        // Appliquer la réduction des cartes cadeaux sur le depositAmount
         if (orderData.discountAmount > 0) {
           depositAmount = Math.max(0, depositAmount - orderData.discountAmount);
         }
@@ -206,7 +230,7 @@ function PaymentPageContent() {
               
               {order.discountAmount > 0 && (
                 <div className="flex justify-between text-green-600">
-                  <span>Bons cadeaux appliqués</span>
+                  <span>Cartes cadeaux appliquées</span>
                   <span>-{order.discountAmount.toFixed(2)}€</span>
                 </div>
               )}
@@ -250,16 +274,18 @@ function PaymentPageContent() {
                         year: 'numeric'
                       });
                       const category = item.participantData?.selectedCategory || '';
+                      const hasVideo = item.participantData?.hasVideo || false;
                       return (
                         <p key={index} className="text-xs text-gray-700">
-                          • Baptême {category} pour {participantName} le {baptemeDate}
+                          • Acompte du baptême {category} pour {participantName} le {baptemeDate}
+                          {hasVideo && <span className="text-green-600"> + Vidéo (25€)</span>}
                         </p>
                       );
                     } else if (item.type === 'GIFT_CARD') {
                       const recipientName = item.participantData?.recipientName || 'destinataire';
                       return (
                         <p key={index} className="text-xs text-gray-700">
-                          • Bon cadeau pour {recipientName}
+                          • Carte cadeau pour {recipientName}
                         </p>
                       );
                     }
@@ -288,14 +314,17 @@ function PaymentPageContent() {
                       </p>
                       <div className="flex justify-between items-start">
                         <span className="text-orange-700">
-                          Solde Stage {payment.stageType}
+                          {payment.type === 'STAGE'
+                            ? `Solde Stage ${payment.itemType}`
+                            : `Solde Baptême ${payment.itemType}`
+                          }
                         </span>
                         <span className="font-semibold text-orange-900">
                           {payment.remainingAmount.toFixed(2)}€
                         </span>
                       </div>
                       <p className="text-xs text-orange-600 mt-1">
-                        À régler <span className='font-semibold underline'>sur place</span> le {new Date(payment.stageStartDate).toLocaleDateString('fr-FR', {
+                        À régler <span className='font-semibold underline'>sur place</span> le {new Date(payment.itemDate).toLocaleDateString('fr-FR', {
                           day: 'numeric',
                           month: 'long',
                           year: 'numeric'

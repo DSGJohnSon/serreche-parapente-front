@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, Trash2, Gift, Users, Clock } from "lucide-react";
+import { Calendar, Trash2, Users, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { MdCardGiftcard } from "react-icons/md";
 
 interface CartItem {
   id: string;
@@ -75,7 +76,7 @@ export function CartItemCard({ item, onRemove }: CartItemCardProps) {
       case "BAPTEME":
         return `Baptême ${item.participantData.selectedCategory} - ${formatDate(item.bapteme?.date)}`;
       case "GIFT_CARD":
-        return `Bon cadeau ${item.giftCardAmount}€`;
+        return `Carte cadeau ${item.giftCardAmount}€`;
       default:
         return "Article";
     }
@@ -116,7 +117,7 @@ export function CartItemCard({ item, onRemove }: CartItemCardProps) {
       case "BAPTEME":
         return <Users className="w-6 h-6 text-blue-600" />;
       case "GIFT_CARD":
-        return <Gift className="w-6 h-6 text-blue-600" />;
+        return <MdCardGiftcard className="w-6 h-6 text-blue-600" />;
       default:
         return <Calendar className="w-6 h-6 text-blue-600" />;
     }

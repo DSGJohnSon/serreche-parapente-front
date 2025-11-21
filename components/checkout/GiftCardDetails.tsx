@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { SessionManager } from '@/lib/sessionManager';
+import { MdCardGiftcard } from 'react-icons/md';
 
 interface GiftCardData {
   recipientName: string;
@@ -72,7 +73,7 @@ export function GiftCardDetails({
       if (result.success) {
         toast({
           title: "Modifications enregistrées",
-          description: "Les informations du bon cadeau ont été mises à jour",
+          description: "Les informations de la carte cadeau ont été mises à jour",
         });
         setIsEditing(false);
         onUpdate();
@@ -113,7 +114,7 @@ export function GiftCardDetails({
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-semibold text-sm text-slate-700 flex items-center gap-2">
                 <Edit2 className="w-4 h-4" />
-                Modifier les informations du bon cadeau
+                Modifier les informations de la carte cadeau
               </h4>
               <div className="flex gap-2">
                 <Button
@@ -172,8 +173,8 @@ export function GiftCardDetails({
                     </Label>
                     <p className="text-xs text-slate-600 mt-1">
                       {notifyRecipient
-                        ? "Le bénéficiaire recevra un email avec son bon cadeau"
-                        : "Vous recevrez le bon cadeau et pourrez l'offrir vous-même"}
+                        ? "Le bénéficiaire recevra un email avec sa carte cadeau"
+                        : "Vous recevrez la carte cadeau et pourrez l'offrir vous-même"}
                     </p>
                   </div>
                 </div>
@@ -223,8 +224,8 @@ export function GiftCardDetails({
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h4 className="font-semibold text-sm text-slate-700 flex items-center gap-2">
-            <Gift className="w-4 h-4" />
-            Détails du bon cadeau
+            <MdCardGiftcard className="w-4 h-4" />
+            Détails de la carte cadeau
           </h4>
           <Button
             variant="ghost"

@@ -43,6 +43,7 @@ import {
 import { EditableParticipantDetails } from "@/components/checkout/EditableParticipantDetails";
 import { VideoToggle } from "@/components/checkout/VideoToggle";
 import { GiftCardDetails } from "@/components/checkout/GiftCardDetails";
+import { MdCardGiftcard } from "react-icons/md";
 
 interface CartItem {
   id: string;
@@ -302,7 +303,7 @@ export default function CheckoutPage() {
       case "BAPTEME":
         return `Baptême ${item.participantData.selectedCategory} - ${new Date(item.bapteme?.date).toLocaleDateString("fr-FR")}`;
       case "GIFT_CARD":
-        return `Bon cadeau ${item.giftCardAmount}€`;
+        return `Carte cadeau ${item.giftCardAmount}€`;
       default:
         return "Article";
     }
@@ -353,9 +354,24 @@ export default function CheckoutPage() {
     return (stage?.price || 0) - deposit;
   };
 
+  const getBaptemeDeposit = (bapteme: any, participantData: any) => {
+    // Acompte + vidéo (si sélectionnée)
+    const acompte = bapteme?.acomptePrice || 35;
+    const videoPrice = participantData?.hasVideo ? 25 : 0;
+    return acompte + videoPrice;
+  };
+
+  const getBaptemeRemaining = (bapteme: any, participantData: any) => {
+    const basePrice = getCategoryPrice(participantData.selectedCategory);
+    const acompte = bapteme?.acomptePrice || 35;
+    // Reste = prix de base - acompte (vidéo déjà payée)
+    return basePrice - acompte;
+  };
+
   const calculateTotals = () => {
     let depositTotal = 0;
     let remainingTotal = 0;
+    let fullTotal = 0; // Prix total de la commande
     const futurePayments: {
       amount: number;
       date: string;
@@ -367,8 +383,10 @@ export default function CheckoutPage() {
       if (item.type === "STAGE") {
         const deposit = getStageDeposit(item.stage);
         const remaining = getStageRemaining(item.stage);
+        const itemTotal = item.stage?.price || 0;
         depositTotal += deposit;
         remainingTotal += remaining;
+        fullTotal += itemTotal;
 
         if (remaining > 0) {
           const participantName = `${item.participantData?.firstName || ''} ${item.participantData?.lastName || ''}`.trim();
@@ -379,12 +397,31 @@ export default function CheckoutPage() {
             participantName: participantName,
           });
         }
+      } else if (item.type === "BAPTEME") {
+        const deposit = getBaptemeDeposit(item.bapteme, item.participantData);
+        const remaining = getBaptemeRemaining(item.bapteme, item.participantData);
+        const itemTotal = getItemPrice(item); // Prix total (baptême + vidéo)
+        depositTotal += deposit;
+        remainingTotal += remaining;
+        fullTotal += itemTotal;
+
+        if (remaining > 0) {
+          const participantName = `${item.participantData?.firstName || ''} ${item.participantData?.lastName || ''}`.trim();
+          futurePayments.push({
+            amount: remaining,
+            date: item.bapteme?.date,
+            description: `Solde Baptême ${item.participantData.selectedCategory}`,
+            participantName: participantName,
+          });
+        }
       } else {
-        depositTotal += getItemPrice(item);
+        const itemTotal = getItemPrice(item);
+        depositTotal += itemTotal;
+        fullTotal += itemTotal;
       }
     });
 
-    // Appliquer les bons cadeaux si présents
+    // Appliquer les cartes cadeaux si présents
     let finalDepositTotal = depositTotal;
     if (appliedGiftCards.length > 0) {
       const totalGiftCardAmount = appliedGiftCards.reduce(
@@ -398,6 +435,7 @@ export default function CheckoutPage() {
       depositTotal: finalDepositTotal,
       originalDepositTotal: depositTotal,
       remainingTotal,
+      fullTotal, // Prix total de la commande
       futurePayments,
     };
   };
@@ -406,7 +444,7 @@ export default function CheckoutPage() {
     if (!giftCardCode.trim()) {
       toast({
         title: "Erreur",
-        description: "Veuillez entrer un code de bon cadeau",
+        description: "Veuillez entrer un code de carte cadeau",
         variant: "destructive",
       });
       return;
@@ -415,8 +453,8 @@ export default function CheckoutPage() {
     // Vérifier si le code n'est pas déjà appliqué
     if (appliedGiftCards.some(card => card.code === giftCardCode)) {
       toast({
-        title: "Bon cadeau déjà appliqué",
-        description: "Ce bon cadeau est déjà utilisé dans cette commande",
+        title: "Carte cadeau déjà appliqué",
+        description: "Ce carte cadeau est déjà utilisé dans cette commande",
         variant: "destructive",
       });
       return;
@@ -446,7 +484,7 @@ export default function CheckoutPage() {
       if (data.success && data.data.giftCard) {
         const giftCard = data.data.giftCard;
         
-        // Calculer le montant restant à payer après les bons cadeaux déjà appliqués
+        // Calculer le montant restant à payer après les cartes cadeaux déjà appliqués
         const currentTotal = calculateTotals().originalDepositTotal || calculateTotals().depositTotal;
         const alreadyDeducted = appliedGiftCards.reduce((sum, card) => sum + card.usedAmount, 0);
         const remainingToPay = currentTotal - alreadyDeducted;
@@ -464,22 +502,22 @@ export default function CheckoutPage() {
         setGiftCardCode("");
 
         toast({
-          title: "Bon cadeau appliqué !",
+          title: "Carte cadeau appliquée !",
           description: `${usedAmount.toFixed(2)}€ seront déduits de votre commande`,
         });
       } else {
         toast({
-          title: "Bon cadeau invalide",
+          title: "Carte cadeau invalide",
           description:
-            data.message || "Ce bon cadeau n'est pas valide ou a expiré",
+            data.message || "Cette carte cadeau n'est pas valide ou a expiré",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Erreur validation bon cadeau:", error);
+      console.error("Erreur validation carte cadeau:", error);
       toast({
         title: "Erreur",
-        description: "Erreur lors de la validation du bon cadeau",
+        description: "Erreur lors de la validation du carte cadeau",
         variant: "destructive",
       });
     } finally {
@@ -490,8 +528,8 @@ export default function CheckoutPage() {
   const removeGiftCard = (codeToRemove: string) => {
     setAppliedGiftCards(appliedGiftCards.filter(card => card.code !== codeToRemove));
     toast({
-      title: "Bon cadeau retiré",
-      description: "Le bon cadeau a été retiré de votre commande",
+      title: "Carte cadeau retirée",
+      description: "La carte cadeau a été retirée de votre commande",
     });
   };
 
@@ -551,7 +589,7 @@ export default function CheckoutPage() {
         };
       case "GIFT_CARD":
         return {
-          title: "Bons Cadeaux",
+          title: "Cartes Cadeaux",
           icon: Gift,
           color: "text-green-600",
           bgColor: "bg-green-50",
@@ -769,7 +807,15 @@ export default function CheckoutPage() {
                             className={`text-sm font-semibold ${sectionInfo.color}`}
                           >
                             {items.reduce(
-                              (total, item) => total + getItemPrice(item),
+                              (total, item) => {
+                                if (item.type === "STAGE") {
+                                  return total + (item.stage?.price || 0);
+                                } else if (item.type === "BAPTEME") {
+                                  return total + getItemPrice(item);
+                                } else {
+                                  return total + getItemPrice(item);
+                                }
+                              },
                               0
                             )}
                             €
@@ -846,7 +892,7 @@ export default function CheckoutPage() {
                                               {expandedDetails[item.id]
                                                 ? "Masquer"
                                                 : "Voir"}{" "}
-                                              les détails du bon cadeau
+                                              les détails de la carte cadeau
                                               <ChevronDown
                                                 className={`w-3 h-3 transition-transform ${expandedDetails[item.id] ? "rotate-180" : ""}`}
                                               />
@@ -857,19 +903,27 @@ export default function CheckoutPage() {
                                     </div>
                                     <div className="flex flex-col items-end gap-1">
                                       {item.type === "BAPTEME" && (
-                                        <div className="text-right">
+                                        <div className="text-right space-y-1">
                                           <p className="text-xs text-gray-500">
-                                            Baptême:{" "}
-                                            {getCategoryPrice(
-                                              item.participantData
-                                                .selectedCategory
-                                            )}
-                                            €
+                                            Baptême: {getCategoryPrice(item.participantData.selectedCategory)}€
+                                          </p>
+                                          <p className="text-xs text-orange-600 font-medium">
+                                            Acompte: {item.bapteme?.acomptePrice || 35}€
                                           </p>
                                           {item.participantData.hasVideo && (
-                                            <p className="text-xs text-gray-500">
-                                              + Vidéo: 25€
+                                            <p className="text-xs text-green-600 font-medium">
+                                              + Vidéo: 25€ (payée aujourd'hui)
                                             </p>
+                                          )}
+                                          {getBaptemeRemaining(item.bapteme, item.participantData) > 0 && (
+                                            <>
+                                              <p className="text-xs text-gray-500">
+                                                Solde: {getBaptemeRemaining(item.bapteme, item.participantData)}€
+                                              </p>
+                                              <p className="text-xs text-gray-400">
+                                                à régler le {formatDate(item.bapteme?.date)}
+                                              </p>
+                                            </>
                                           )}
                                         </div>
                                       )}
@@ -910,12 +964,9 @@ export default function CheckoutPage() {
                                         </div>
                                       )}
                                       <div className="flex items-center gap-3">
-                                        <p className="font-bold text-sm text-gray-800">
-                                          {item.type === "STAGE"
-                                            ? getStageDeposit(item.stage)
-                                            : getItemPrice(item)}
-                                          €
-                                        </p>
+                                         <p className="font-bold text-sm text-gray-800">
+                                           {getItemPrice(item)}€
+                                         </p>
                                         <Button
                                           variant="ghost"
                                           size="sm"
@@ -963,7 +1014,7 @@ export default function CheckoutPage() {
                                     </div>
                                   )}
 
-                                {/* Détails du bon cadeau - Affichés sur demande */}
+                                {/* Détails de la carte cadeau - Affichés sur demande */}
                                 {item.type === "GIFT_CARD" &&
                                   expandedDetails[item.id] && (
                                     <div className="ml-2 animate-in fade-in slide-in-from-top-2 duration-200">
@@ -995,7 +1046,7 @@ export default function CheckoutPage() {
                           Prix total
                         </p>
                         <p className="text-xl font-bold text-slate-800">
-                          {totalAmount.toFixed(2)}€
+                          {calculateTotals().fullTotal.toFixed(2)}€
                         </p>
                         <p className="text-xs text-slate-500 mt-0.5">Tous produits confondus • TVA incluse</p>
                       </div>
@@ -1017,6 +1068,8 @@ export default function CheckoutPage() {
                         {cartItems.map((item) => {
                           const itemPrice = item.type === "STAGE"
                             ? getStageDeposit(item.stage)
+                            : item.type === "BAPTEME"
+                            ? getBaptemeDeposit(item.bapteme, item.participantData)
                             : getItemPrice(item);
                           const participantName = `${item.participantData?.firstName || ''} ${item.participantData?.lastName || ''}`.trim();
                           
@@ -1030,11 +1083,15 @@ export default function CheckoutPage() {
                                   <span className="font-medium block mb-0.5">{participantName}</span>
                                 )}
                                 {item.type === "STAGE" && `Acompte Stage ${item.participantData?.selectedStageType || item.stage?.type} du ${formatDate(item.stage?.startDate)}`}
-                                {item.type === "BAPTEME" && `Baptême ${item.participantData.selectedCategory} du ${formatDate(item.bapteme?.date)}`}
-                                {item.type === "GIFT_CARD" && `Bon cadeau ${item.giftCardAmount}€`}
-                                {item.type === "BAPTEME" && item.participantData.hasVideo && (
-                                  <span className="block text-slate-500 mt-0.5">+ Option vidéo (25€)</span>
+                                {item.type === "BAPTEME" && (
+                                  <>
+                                    Acompte Baptême {item.participantData.selectedCategory} du {formatDate(item.bapteme?.date)}
+                                    {item.participantData.hasVideo && (
+                                      <span className="block text-green-600 mt-0.5">+ Option vidéo (25€)</span>
+                                    )}
+                                  </>
                                 )}
+                                {item.type === "GIFT_CARD" && `Carte cadeau ${item.giftCardAmount}€`}
                               </span>
                               <span className="font-medium text-slate-700">
                                 {itemPrice.toFixed(2)}€
@@ -1109,12 +1166,12 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                {/* Info bon cadeau */}
+                {/* Info carte cadeau */}
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
                   <Gift className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-green-800">
-                      Vous avez un bon cadeau ?
+                      Vous avez une carte cadeau ?
                     </p>
                     <p className="text-xs text-green-700 mt-1">
                       Vous pourrez l'appliquer à l'étape suivante pour réduire
@@ -1173,7 +1230,7 @@ export default function CheckoutPage() {
                         Prix total
                       </p>
                       <p className="text-xl font-bold text-slate-800">
-                        {totalAmount.toFixed(2)}€
+                        {calculateTotals().fullTotal.toFixed(2)}€
                       </p>
                       <p className="text-xs text-slate-500 mt-0.5">Tous produits confondus • TVA incluse</p>
                     </div>
@@ -1203,12 +1260,12 @@ export default function CheckoutPage() {
                           </span>
                         </div>
 
-                        {/* Section bon cadeau */}
+                        {/* Section carte cadeau */}
                         <div className="bg-green-50 rounded-lg p-3 border border-green-200 space-y-2">
                           <div className="flex items-center gap-2">
                             <Gift className="w-4 h-4 text-green-600" />
                             <h4 className="font-medium text-xs text-green-800">
-                              Appliquer un bon cadeau
+                              Appliquer une carte cadeau
                             </h4>
                           </div>
                           <div className="flex gap-2">
@@ -1234,20 +1291,20 @@ export default function CheckoutPage() {
                           </div>
                           <p className="text-xs text-green-700">
                             {appliedGiftCards.length > 0
-                              ? "Vous pouvez ajouter plusieurs bons cadeaux"
+                              ? "Vous pouvez ajouter plusieurs cartes cadeaux"
                               : "Entrez votre code pour réduire le montant à payer"}
                           </p>
                         </div>
 
-                        {/* Bons cadeaux appliqués */}
+                        {/* Cartes cadeaux appliqués */}
                         {appliedGiftCards.length > 0 && (
                           <div className="space-y-2">
                             {appliedGiftCards.map((giftCard) => (
                               <div key={giftCard.code} className="bg-green-50 rounded p-2 border border-green-200">
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-xs font-medium text-green-800 flex items-center gap-1">
-                                    <Gift className="w-3 h-3" />
-                                    Bon cadeau: {giftCard.code}
+                                    <MdCardGiftcard className="w-3 h-3" />
+                                    Carte cadeau: {giftCard.code}
                                   </span>
                                   <Button
                                     onClick={() => removeGiftCard(giftCard.code)}
@@ -1266,7 +1323,7 @@ export default function CheckoutPage() {
                                 </div>
                                 {giftCard.remainingAmount > 0 && (
                                   <div className="flex justify-between text-xs mt-1 pt-1 border-t border-green-200">
-                                    <span className="text-green-600">Reste sur le bon:</span>
+                                    <span className="text-green-600">Reste sur la carte cadeau :</span>
                                     <span className="font-semibold text-green-600">
                                       {giftCard.remainingAmount.toFixed(2)}€
                                     </span>
@@ -1274,7 +1331,7 @@ export default function CheckoutPage() {
                                 )}
                                 {giftCard.remainingAmount === 0 && (
                                   <p className="text-xs text-green-600 font-medium mt-1">
-                                    ✓ Bon cadeau entièrement utilisé
+                                    ✓ Carte cadeau entièrement utilisée
                                   </p>
                                 )}
                               </div>

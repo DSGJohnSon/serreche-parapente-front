@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import Link from 'next/link';
 import Image from 'next/image';
+import { MdCardGiftcard } from 'react-icons/md';
 
 const BAPTEME_GIFT_CARDS = [
   {
@@ -198,77 +199,14 @@ export default function BonCadeauReservationPage() {
 
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center mb-8">
-          <Gift className="w-16 h-16 mx-auto mb-4 text-blue-600" />
-          <h2 className="text-3xl font-bold mb-2">Offrir un Bon Cadeau</h2>
-          <p className="text-gray-600">Faites plaisir avec une expérience inoubliable en parapente</p>
+          <MdCardGiftcard className="w-16 h-16 mx-auto mb-4 text-blue-600" />
+          <h2 className="text-3xl font-bold mb-2">Offrir une Carte Cadeau</h2>
+          <p className="text-gray-600">Offrez à vos proches le choix libre sur notre boutique Serre Chevalier Parapente !</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* Bons cadeaux Baptêmes */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CardTitle>Bons Cadeaux Baptêmes</CardTitle>
-              </div>
-              <p className="text-sm text-gray-600 mt-2">
-                Offrez un vol découverte inoubliable avec nos baptêmes en parapente
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {BAPTEME_GIFT_CARDS.map((bapteme) => (
-                  <div
-                    key={bapteme.id}
-                    className={`relative rounded-lg overflow-hidden cursor-pointer transition-all border-2 ${
-                      selectedSuggestion === bapteme.id
-                        ? 'border-blue-500 shadow-lg scale-105'
-                        : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
-                    }`}
-                    onClick={() => handleSuggestionSelect(bapteme)}
-                  >
-                    {bapteme.popular && (
-                      <Badge className="absolute top-2 right-2 z-10 bg-orange-500">
-                        <Star className="w-3 h-3 mr-1" />
-                        Populaire
-                      </Badge>
-                    )}
-
-                    {/* Image */}
-                    <div className="relative h-48 w-full">
-                      <Image
-                        src={bapteme.image}
-                        alt={bapteme.label}
-                        fill
-                        className="object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-2 left-2 right-2">
-                        <h3 className="font-bold text-white text-lg">{bapteme.label}</h3>
-                        <p className="text-white/90 text-sm">{bapteme.duration}</p>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4 bg-white">
-                      <p className="text-2xl font-bold text-blue-600 mb-2 text-center">
-                        {bapteme.amount}€
-                      </p>
-                      <p className="text-sm text-gray-600 text-center">{bapteme.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Bon cadeau à valeur libre */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Bon Cadeau à Valeur Libre</CardTitle>
-              <p className="text-sm text-gray-600 mt-2">
-                Laissez le bénéficiaire choisir son expérience avec un montant personnalisé
-              </p>
-            </CardHeader>
+          <Card className='pt-6'>
             <CardContent>
               <div
                 className={`relative p-6 border-2 rounded-lg cursor-pointer transition-all ${
@@ -279,17 +217,15 @@ export default function BonCadeauReservationPage() {
                 onClick={() => handleSuggestionSelect(CUSTOM_AMOUNT_CARD)}
               >
                 <div className="text-center">
-                  <Gift className="w-12 h-12 mx-auto mb-3 text-blue-600" />
-                  <h3 className="font-semibold text-lg mb-2">{CUSTOM_AMOUNT_CARD.label}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{CUSTOM_AMOUNT_CARD.description}</p>
+                  <h3 className="text-xl font-semibold mb-2">Bon cadeau à valeur libre</h3>
 
                   {selectedSuggestion === CUSTOM_AMOUNT_CARD.id && (
-                    <div className="mt-4 max-w-xs mx-auto">
-                      <Label htmlFor="customAmount">Montant personnalisé (minimum 50€)</Label>
+                    <div className="max-w-xs mx-auto">
+                      <Label htmlFor="customAmount" className='text-gray-600 block mb-4'>Montant personnalisé (minimum 20€)</Label>
                       <Input
                         id="customAmount"
                         type="number"
-                        min="50"
+                        min="20"
                         max="2000"
                         step="10"
                         {...register('customAmount', {
@@ -298,7 +234,6 @@ export default function BonCadeauReservationPage() {
                           max: { value: 2000, message: 'Montant maximum 2000€' }
                         })}
                         placeholder="Montant en €"
-                        className="mt-2"
                       />
                       {errors.customAmount && (
                         <p className="text-red-500 text-sm mt-1">{errors.customAmount.message}</p>
@@ -385,13 +320,10 @@ export default function BonCadeauReservationPage() {
                     <Label htmlFor="personalMessage" className="text-sm font-medium text-slate-700">
                       Message personnalisé (optionnel)
                     </Label>
-                    <p className="text-xs text-slate-600 mt-1 mb-2">
-                      Ce message sera inclus dans l'email envoyé au bénéficiaire
-                    </p>
                     <Textarea
                       id="personalMessage"
                       {...register('personalMessage')}
-                      placeholder="Écrivez un message personnel qui accompagnera le bon cadeau..."
+                      placeholder="Ce message sera inclus dans l'email envoyé au bénéficiaire"
                       rows={4}
                       maxLength={2000}
                       className="mt-2"
@@ -442,17 +374,17 @@ export default function BonCadeauReservationPage() {
               {/* Informations importantes */}
               <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                  <Gift className="w-5 h-5" />
+                  <MdCardGiftcard className="w-5 h-5" />
                   Informations importantes
                 </h3>
                 <ul className="space-y-2 text-sm text-blue-800">
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Le bon cadeau sera <strong>valable un an</strong> à compter de la date d'achat.</span>
+                    <span>La carte cadeau sera <strong>valable un an</strong> à compter de la date d'achat.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5">•</span>
-                    <span>L'achat d'un bon cadeau <strong>ne constitue pas une réservation</strong>. Le bénéficiaire devra réserver un créneau de lui-même et utiliser son bon.</span>
+                    <span>La carte cadeau pourra être utilisée <strong>pour tous les produits présents sur le site</strong>. Le bénéficiaire devra renseigner son code cadeau juste avant le paiement.</span>
                   </li>
                 </ul>
               </div>

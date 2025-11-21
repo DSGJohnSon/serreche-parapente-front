@@ -9,12 +9,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Trash2, Mountain, Users, Gift, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { ShoppingCart, Trash2, Mountain, Users, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SessionManager } from "@/lib/sessionManager";
 import { useToast } from "@/components/ui/use-toast";
 import { CartItemCard } from "./CartItemCard";
 import { ReservationStatusBadge } from "./ReservationStatusBadge";
+import { MdCardGiftcard } from "react-icons/md";
 
 interface CartItem {
   id: string;
@@ -209,8 +210,8 @@ export function CartSidebar({ isScrolled }: { isScrolled: boolean }) {
         };
       case 'GIFT_CARD':
         return {
-          title: 'Bons Cadeaux',
-          icon: Gift,
+          title: 'Cartes Cadeaux',
+          icon: MdCardGiftcard,
           color: 'text-slate-600',
           bgColor: 'bg-slate-50',
           borderColor: 'border-slate-200',

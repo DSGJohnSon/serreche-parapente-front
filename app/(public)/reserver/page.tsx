@@ -3,8 +3,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, Gift, ArrowRight, Mountain, Plane } from 'lucide-react';
+import { Calendar, Users, ArrowRight, Mountain, Plane, Gift, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { MdCardGiftcard } from 'react-icons/md';
 
 const PRODUCTS = [
   {
@@ -15,6 +16,7 @@ const PRODUCTS = [
     href: '/reserver/stage',
     features: ['Formation complète', 'Encadrement professionnel', 'Matériel fourni'],
     popular: false,
+    isDisabled: false
   },
   {
     id: 'bapteme',
@@ -24,15 +26,27 @@ const PRODUCTS = [
     href: '/reserver/bapteme',
     features: ['Vol découverte', 'Vue panoramique', 'Souvenir photo/vidéo'],
     popular: true,
+    isDisabled: false
   },
   {
     id: 'bon-cadeau',
     title: 'Bon Cadeau',
-    description: 'Offrez une expérience inoubliable avec un bon cadeau parapente.',
+    description: 'Offrez à vos proches une place en stage ou baptême à réserver quand ils le souhaitent.',
     icon: Gift,
-    href: '/reserver/bon-cadeau',
+    href: '/reserver/carte-cadeau',
+    features: ['1 place pour un stage / baptême', 'Valable 1 an', 'Message personnalisé'],
+    popular: false,
+    isDisabled: true
+  },
+  {
+    id: 'carte-cadeau',
+    title: 'Carte Cadeau',
+    description: 'Offrez à vos proches un montant personalisé à dépenser sur notre boutique.',
+    icon: MdCardGiftcard,
+    href: '/reserver/carte-cadeau',
     features: ['Montant personnalisable', 'Valable 1 an', 'Message personnalisé'],
     popular: false,
+    isDisabled: false
   },
 ];
 
@@ -53,8 +67,8 @@ export default function ReserverPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {PRODUCTS.map((product) => {
             const IconComponent = product.icon;
             return (
@@ -97,9 +111,10 @@ export default function ReserverPage() {
                     <Button
                       className="w-full gap-2"
                       size="lg"
+                      disabled={product.isDisabled}
                     >
-                      Réserver maintenant
-                      <ArrowRight className="w-4 h-4" />
+                      {product.isDisabled ? "Bientôt disponible" : "Réserver maintenant"}
+                      {product.isDisabled ? <Clock className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
                     </Button>
                   </Link>
                 </CardContent>

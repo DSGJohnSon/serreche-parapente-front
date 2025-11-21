@@ -48,7 +48,7 @@ function CheckoutSuccessPageContent() {
       case 'BAPTEME':
         return `Baptême ${item.participantData.selectedCategory} - ${new Date(item.bapteme?.date).toLocaleDateString('fr-FR')}`;
       case 'GIFT_CARD':
-        return `Bon cadeau ${item.giftCardAmount}€`;
+        return `Carte cadeau ${item.giftCardAmount}€`;
       default:
         return 'Article';
     }
@@ -61,6 +61,18 @@ function CheckoutSuccessPageContent() {
   const getStageRemaining = (stage: any) => {
     const deposit = getStageDeposit(stage);
     return (stage?.price || 0) - deposit;
+  };
+
+  const getBaptemeDeposit = (bapteme: any, participantData: any) => {
+    const acompte = bapteme?.acomptePrice || 35;
+    const videoPrice = participantData?.hasVideo ? 25 : 0;
+    return acompte + videoPrice;
+  };
+
+  const getBaptemeRemaining = (bapteme: any, participantData: any) => {
+    const basePrice = getCategoryPrice(participantData.selectedCategory);
+    const acompte = bapteme?.acomptePrice || 35;
+    return basePrice - acompte;
   };
 
   const calculateTotals = () => {
@@ -89,12 +101,27 @@ function CheckoutSuccessPageContent() {
             participantName: participantName,
           });
         }
+      } else if (item.type === 'BAPTEME') {
+        const deposit = getBaptemeDeposit(item.bapteme, item.participantData);
+        const remaining = getBaptemeRemaining(item.bapteme, item.participantData);
+        depositTotal += deposit;
+        remainingTotal += remaining;
+
+        if (remaining > 0) {
+          const participantName = `${item.participantData?.firstName || ''} ${item.participantData?.lastName || ''}`.trim();
+          futurePayments.push({
+            amount: remaining,
+            date: item.bapteme?.date,
+            description: `Solde Baptême ${item.participantData.selectedCategory}`,
+            participantName: participantName,
+          });
+        }
       } else {
         depositTotal += item.totalPrice;
       }
     });
 
-    // Appliquer la réduction des bons cadeaux
+    // Appliquer la réduction des cartes cadeaux
     if (order?.discountAmount > 0) {
       depositTotal = Math.max(0, depositTotal - order.discountAmount);
     }
@@ -325,6 +352,22 @@ function CheckoutSuccessPageContent() {
                           </span>
                         </div>
                       );
+                    } else if (item.type === 'BAPTEME') {
+                      const hasVideo = item.participantData?.hasVideo || false;
+                      return (
+                        <div key={item.id} className="flex justify-between text-sm">
+                          <span className="text-green-700">
+                            Acompte baptême {item.participantData.selectedCategory} - {item.participantData.firstName} {item.participantData.lastName}
+                            {hasVideo && <span className="text-green-600"> + Vidéo (25€)</span>}
+                            <span className="text-xs text-green-600 block">
+                              {formatDate(item.bapteme?.date)}
+                            </span>
+                          </span>
+                          <span className="font-medium text-green-900">
+                            {getBaptemeDeposit(item.bapteme, item.participantData)}€
+                          </span>
+                        </div>
+                      );
                     } else {
                       return (
                         <div key={item.id} className="flex justify-between text-sm">
@@ -341,11 +384,11 @@ function CheckoutSuccessPageContent() {
                 </div>
               </div>
 
-              {/* Bons cadeaux appliqués */}
+              {/* Cartes cadeaux appliqués */}
               {order.discountAmount > 0 && (
                 <div className="mt-3 pt-3 border-t border-green-300 bg-green-100 rounded p-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-green-800 font-medium">Bons cadeaux appliqués</span>
+                    <span className="text-green-800 font-medium">Cartes cadeaux appliquées</span>
                     <span className="font-semibold text-green-900">
                       -{order.discountAmount.toFixed(2)}€
                     </span>
@@ -363,7 +406,7 @@ function CheckoutSuccessPageContent() {
                 <p className="text-sm text-orange-800 mb-1">
                   Solde total à venir : <strong>{calculateTotals().remainingTotal.toFixed(2)}€</strong>
                 </p>
-                <p className='text-xs text-orange-700 mb-3'>Les soldes de stages seront à régler sur place le jour du stage.</p>
+                <p className='text-xs text-orange-700 mb-3'>Les soldes seront à régler sur place le jour de l'activité.</p>
 
                 <div className="space-y-3">
                   {calculateTotals().futurePayments.map((payment, index) => (
@@ -380,7 +423,7 @@ function CheckoutSuccessPageContent() {
                         </span>
                       </div>
                       <p className="text-xs text-orange-600 mt-1">
-                        À régler <span className='font-semibold underline'>sur place</span> le jour du stage
+                        À régler <span className='font-semibold underline'>sur place</span> le jour de l'activité
                       </p>
                     </div>
                   ))}
